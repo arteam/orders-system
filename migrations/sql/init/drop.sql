@@ -6,6 +6,6 @@ prepare stmt from @query; execute stmt; deallocate prepare stmt;
 
 drop database customers;
 drop database bids;
-drop database fullfilments;
+drop database fulfillments;
 drop database contractors;
 

@@ -4,7 +4,7 @@ set @os_password = ;
 
 create database customers;
 create database bids;
-create database fullfilments;
+create database fulfillments;
 create database contractors;
 
 -- This is gross. Thanks, MySQL!
@@ -17,7 +17,7 @@ prepare stmt from @query; execute stmt; deallocate prepare stmt;
 set @query = concat('grant select,insert,update,delete on bids.* to "',@os_user,'"@"localhost" ');
 prepare stmt from @query; execute stmt; deallocate prepare stmt;
 
-set @query = concat('grant select,insert,update,delete on fullfilments.* to "',@os_user,'"@"localhost" ');
+set @query = concat('grant select,insert,update,delete on fulfillments.* to "',@os_user,'"@"localhost" ');
 prepare stmt from @query; execute stmt; deallocate prepare stmt;
 
 set @query = concat('grant select,insert,update,delete on contractors.* to "',@os_user,'"@"localhost" ');
