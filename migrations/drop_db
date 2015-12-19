@@ -1,0 +1,10 @@
+#!/bin/bash
+# Drop users and databases
+
+DROP_SCRIPT='./init/drop.sql'
+
+[[ -z "$OS_USER" ]] && { echo "OS_USER is not set" && exit 1; }
+[[ "$EUID" -ne 0 ]] && { echo "Not the root user"  && exit 1; }
+
+sed "s/<OS_USER>/$OS_USER/g" "$DROP_SCRIPT" | sed "s/<OS_PASSWORD>/$OS_PASSWORD/g" | mysql -p
+exit $?
