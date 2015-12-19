@@ -1,0 +1,11 @@
+#!/bin/bash
+# Create users and databases
+
+CREATE_DB_SCRIPT='./init/create.sql'
+
+[[ -z "$OS_USER"     ]] && { echo "OS_USER is not set"     && exit 1; }
+[[ -z "$OS_PASSWORD" ]] && { echo "OS_PASSWORD is not set" && exit 1; }
+[[ "$EUID" -ne 0     ]] && { echo "Not the root user"      && exit 1; }
+
+sed "s/<OS_USER>/$OS_USER/g" "$CREATE_DB_SCRIPT"  | sed "s/<OS_PASSWORD>/$OS_PASSWORD/g" | mysql -p
+exit $?

@@ -1,11 +1,7 @@
--- TODO Get the user from environment variables.
-set @os_user = ;
+grant usage on *.* to '<OS_USER>'@'localhost';
+drop user '<OS_USER>'@'localhost';
 
-set @query = concat('drop user "',@os_user,'"@"localhost" ');
-prepare stmt from @query; execute stmt; deallocate prepare stmt;
-
-drop database customers;
-drop database bids;
-drop database fulfillments;
-drop database contractors;
-
+drop database if exists customers;
+drop database if exists bids;
+drop database if exists fulfillments;
+drop database if exists contractors;
