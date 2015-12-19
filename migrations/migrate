@@ -1,0 +1,17 @@
+#!/bin/bash
+# Migrate databases to the last version
+
+MIGRATION_USER='root'
+MIGRATION_PASSWORD='$'
+
+[[ "$EUID" -ne 0 ]] && { echo "Not the root user"  && exit 1; }
+
+read -p "Enter migration user's password: " -s MIGRATION_PASSWORD
+[[ -z "$MIGRATION_PASSWORD" ]] && { echo -e "\nMigration user's password is not set" && exit 1; }
+
+./flyway migrate -configFile='./conf/bids-flyway.conf'         -user="$MIGRATION_USER" -password="$MIGRATION_PASSWORD"
+./flyway migrate -configFile='./conf/contractors-flyway.conf'  -user="$MIGRATION_USER" -password="$MIGRATION_PASSWORD"
+./flyway migrate -configFile='./conf/customers-flyway.conf'    -user="$MIGRATION_USER" -password="$MIGRATION_PASSWORD"
+./flyway migrate -configFile='./conf/fulfillments-flyway.conf' -user="$MIGRATION_USER" -password="$MIGRATION_PASSWORD"
+
+exit $?
