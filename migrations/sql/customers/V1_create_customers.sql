@@ -1,5 +1,5 @@
 create table customers (
-  id mediumint not null auto_increment,
-  amount decimal (9,2)
+  id     int not null auto_increment,
+  amount decimal(9, 2),
+  primary key (id)
 );
-
