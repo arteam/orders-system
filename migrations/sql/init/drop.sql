@@ -1,5 +1,5 @@
 -- TODO Get the user from environment variables.
-set @os_user = '';
+set @os_user = ;
 
 set @query = concat('drop user "',@os_user,'"@"localhost" ');
 prepare stmt from @query; execute stmt; deallocate prepare stmt;

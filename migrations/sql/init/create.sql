@@ -1,6 +1,6 @@
 -- TODO Get credentials from environment variables.
-set @os_user = '';
-set @os_password = '';
+set @os_user = ;
+set @os_password = ;
 
 create database customers;
 create database bids;
