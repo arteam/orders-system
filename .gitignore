@@ -2,5 +2,10 @@
 /target
 *.tmp
 *.*~
+
+# Idea configuration
 /.idea
 *.iml
+
+# Composer dependencies
+/vendor
