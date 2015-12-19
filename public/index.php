@@ -10,15 +10,30 @@ $app->get('/api/customers', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams("customers");
 
     try {
-        $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $user, $pass);
-        $stmt = $pdo->prepare("select id, amount from customers");
-        $stmt->execute();
+        $pdo = buildPDO($dbName, $user, $pass);
+        $stmt = $pdo->query("select id, amount from customers");
         $customers = json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
         $stmt = null;
         $pdo = null;
         $response->getBody()->write($customers);
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
+        return handleError($response);
+    }
+});
+$app->get('/api/bids', function (Request $request, Response $response) {
+    list($dbName, $user, $pass) = getDbConnectionParams("bids");
+
+    try {
+        $pdo = buildPDO($dbName, $user, $pass);
+        $stmt = $pdo->query("select id, product, amount, price, customer_id, place_time from bids");
+        $bids = json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        $stmt = null;
+        $pdo = null;
+        $response->getBody()->write($bids);
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (PDOException $e) {
+        print $e;
         return handleError($response);
     }
 });
@@ -40,6 +55,20 @@ function getDbConnectionParams($section)
     return array($dbName, $user, $pass);
 }
 
+
+/**
+ * @param $dbName
+ * @param $user
+ * @param $pass
+ * @return PDO
+ */
+function buildPDO($dbName, $user, $pass)
+{
+    $pdo = new PDO("mysql:host=localhost;dbname=$dbName", $user, $pass);
+    $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);  // Use native prepare statements
+    $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false); // Convert numeric values to strings
+    return $pdo;
+}
 
 /**
  * Handle an unexpected error
