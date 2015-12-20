@@ -6,6 +6,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 require '../vendor/autoload.php';
 
 $app = new \Slim\App;
+$app->get('/', function (Request $request, Response $response) {
+    $response->getBody()->write(file_get_contents("index.html"));
+});
 $app->get('/api/customers', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams("customers");
 
@@ -36,9 +39,6 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         print $e;
         return handleError($response);
     }
-});
-$app->get('/', function (Request $request, Response $response) {
-    $response->getBody()->write(file_get_contents("index.html"));
 });
 
 $app->run();
