@@ -11,7 +11,7 @@ class ContractorTest extends AppTest
 
         $this->assertEquals('201', $res->getStatusCode());
         $cookie = $res->getHeader('Set-Cookie');
-        $this->assertTrue($this->startsWith($cookie[0], 'os_session_id'));
+        $this->assertTrue($this->startsWith($cookie[0], 'cnt_session_id'));
         $this->assertTrue($this->startsWith($uri, 'api/contractors/'));
     }
 

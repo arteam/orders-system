@@ -87,7 +87,7 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
 
     $response->getBody()->write("api/contractors/profile");
     return $response->withStatus(201)
-        ->withHeader('Set-Cookie', "os_session_id=$sessionId; Path=/");
+        ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; Path=/");
 });
 $app->post('/api/customers/register', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams('customers');
