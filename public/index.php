@@ -40,7 +40,38 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         return handleError($response);
     }
 });
+$app->get('/api/bids/{id}', function (Request $request, Response $response) {
+    $id = $request->getAttribute("id");
+    if (!is_numeric($id)) {
+        $response->getBody()->write(json_encode(array("code" => 400, "message" => "Bad request")));
+        return $response
+            ->withStatus(400)
+            ->withHeader('Content-Type', 'application/json');
+    }
 
+    list($dbName, $user, $pass) = getDbConnectionParams('bids');
+    try {
+        $pdo = buildPDO($dbName, $user, $pass);
+        $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
+                               where id=:id');
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+
+        $bid = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($bid == null) {
+            $response->getBody()->write(json_encode(array("code" => 404, "message" => "Not Found")));
+            return $response
+                ->withStatus(404)
+                ->withHeader('Content-Type', 'application/json');
+        }
+        $response->getBody()->write(json_encode($bid));
+        $stmt = null;
+        $pdo = null;
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (PDOException $e) {
+        return handleError($response);
+    }
+});
 $app->run();
 
 /**
