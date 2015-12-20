@@ -90,6 +90,22 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
     return $response->withStatus(201)
         ->withHeader('Set-Cookie', "os_session_id=$sessionId; Path=/");
 });
+$app->post('/api/customers/register', function (Request $request, Response $response) {
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    // Random secure session id
+    $sessionId = base64_encode(openssl_random_pseudo_bytes(32));
+
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 0.0)");
+    $stmt->bindParam(":session_id", $sessionId);
+    $stmt->execute();
+    $stmt = null;
+    $pdo = null;
+
+    $response->getBody()->write("api/customers/profile");
+    return $response->withStatus(201)
+        ->withHeader('Set-Cookie', "cst_session_id=$sessionId; Path=/");
+});
 
 $app->run();
 
