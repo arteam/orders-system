@@ -37,6 +37,10 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         return handleError($response);
     }
 });
+$app->get('/', function (Request $request, Response $response) {
+    $response->getBody()->write(file_get_contents("index.html"));
+});
+
 $app->run();
 
 /**
