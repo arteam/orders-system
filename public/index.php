@@ -106,7 +106,48 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
         ->withHeader('Set-Cookie', "cst_session_id=$sessionId; Path=/");
 });
 
+/**
+ * Place a new bid from a customer
+ */
+$app->post('/api/bids/place', function (Request $request, Response $response) {
+    $customerSessionId = $request->getCookieParams()["cst_session_id"];
+    if ($customerSessionId == null) {
+        return returnForbidden($response);
+    }
+
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    $customersPdo = buildPDO($dbName, $user, $pass);
+    $stmt = $customersPdo->prepare("select id from customers where session_id=:session_id");
+    $stmt->bindParam(':session_id', $customerSessionId);
+    $stmt->execute();
+    $customerId = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($customerId == null) {
+        return returnForbidden($response);
+    }
+
+    $stmt = null;
+    $customersPdo = null;
+
+    // TODO save the bid to the DB
+    $bid = json_decode($request->getBody());
+    list($dbName, $user, $pass) = getDbConnectionParams('bids');
+    $bidsPdo = buildPDO($dbName, $user, $pass);
+
+});
 $app->run();
+
+
+/**
+ * @param Response $response
+ * @return MessageInterface
+ */
+function returnForbidden(Response $response)
+{
+    $response->getBody()->write(json_encode(array("code" => 403, "message" => "Forbidden")));
+    return $response
+        ->withStatus(403)
+        ->withHeader('Content-Type', 'application/json');
+}
 
 /**
  * Parse the given section in the configuration file
