@@ -1,0 +1,13 @@
+{
+  "name": "orders-system",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "public/components/",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4"
+  }
+}
