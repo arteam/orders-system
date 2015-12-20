@@ -82,11 +82,10 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
     $stmt = $pdo->prepare("insert into contractors(session_id, amount) values (:session_id, 0.0)");
     $stmt->bindParam(":session_id", $sessionId);
     $stmt->execute();
-    $id = $pdo->lastInsertId();
     $stmt = null;
     $pdo = null;
 
-    $response->getBody()->write("api/contractors/$id");
+    $response->getBody()->write("api/contractors/profile");
     return $response->withStatus(201)
         ->withHeader('Set-Cookie', "os_session_id=$sessionId; Path=/");
 });
