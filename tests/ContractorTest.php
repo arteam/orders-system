@@ -14,9 +14,4 @@ class ContractorTest extends AppTest
         $this->assertTrue($this->startsWith($cookie[0], 'cnt_session_id'));
         $this->assertTrue($this->startsWith($uri, 'api/contractors/'));
     }
-
-    private function startsWith($haystack, $needle)
-    {
-        return (substr($haystack, 0, strlen($needle)) === $needle);
-    }
 }

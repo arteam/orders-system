@@ -42,4 +42,25 @@ class BidTest extends AppTest
         $this->assertEquals('400', $res->getStatusCode());
         $this->assertEquals('application/json', $res->getHeaderLine('content-type'));
     }
+
+    public function placeBid()
+    {
+        $res = $this->client->request('POST', 'api/bids/place', [
+            'json' => [
+                "product" => "Coffee",
+                "amount" => 22,
+                "price" => 100.70
+            ],
+            'headers'  => [
+                'Cookie' > 'cst_session_id=3vsN7oENgh7BdZYzwr/GkqqJt6ZWb7WD'
+            ]
+        ]);
+
+        $this->assertEquals('200', $res->getStatusCode());
+        $this->assertEquals('application/json', $res->getHeaderLine('content-type'));
+
+        $uri = $res->getBody();
+        print $uri;
+        $this->assertTrue($this->startsWith($uri, 'api/bids/'));
+    }
 }
