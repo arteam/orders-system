@@ -122,14 +122,13 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     $customerId = $row['id'];
-    if ($customerId == null) {
+    if ($customerId == null || $customerId == 0) {
         return returnForbidden($response);
     }
 
     $stmt = null;
     $customersPdo = null;
 
-    // TODO save the bid to the DB
     $bid = json_decode($request->getBody());
     $product = $bid->{'product'};
     $amount = $bid->{'amount'};

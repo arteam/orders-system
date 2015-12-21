@@ -50,4 +50,8 @@ class AppTest extends PHPUnit_Framework_TestCase
         return false;
     }
 
+    public function startsWith($haystack, $needle)
+    {
+        return (substr($haystack, 0, strlen($needle)) === $needle);
+    }
 }

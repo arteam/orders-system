@@ -13,9 +13,4 @@ class CustomerTest extends AppTest
         $this->assertTrue($this->startsWith($cookie[0], 'cst_session_id'));
         $this->assertTrue($this->startsWith($uri, 'api/customers/profile'));
     }
-
-    private function startsWith($haystack, $needle)
-    {
-        return (substr($haystack, 0, strlen($needle)) === $needle);
-    }
 }
