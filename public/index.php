@@ -120,7 +120,8 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $stmt = $customersPdo->prepare("select id from customers where session_id=:session_id");
     $stmt->bindParam(':session_id', $customerSessionId);
     $stmt->execute();
-    $customerId = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $customerId = $row['id'];
     if ($customerId == null) {
         return returnForbidden($response);
     }
@@ -130,9 +131,27 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
 
     // TODO save the bid to the DB
     $bid = json_decode($request->getBody());
+    $product = $bid->{'product'};
+    $amount = $bid->{'amount'};
+    $price = $bid->{'price'};
+
     list($dbName, $user, $pass) = getDbConnectionParams('bids');
     $bidsPdo = buildPDO($dbName, $user, $pass);
+    $bidsStmt = $bidsPdo->prepare("insert into bids(product, amount, price, customer_id, place_time) values
+                      (:product, :amount, :price, :customer_id, now())");
+    $bidsStmt->bindParam(":product", $product);
+    $bidsStmt->bindParam(":amount", $amount);
+    $bidsStmt->bindParam(":price", $price);
+    $bidsStmt->bindParam(":customer_id", $customerId);
+    $bidsStmt->execute();
 
+    $bidId = $bidsPdo->lastInsertId();
+
+    $bidsStmt = null;
+    $bidsPdo = null;
+
+    $response->getBody()->write("api/bids/$bidId");
+    return $response->withStatus(201);
 });
 $app->run();
 
