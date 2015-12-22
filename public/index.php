@@ -128,10 +128,21 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $customersPdo = null;
 
     $bid = json_decode($request->getBody());
-    $product = filter_var(trim($bid->{'product'}), FILTER_SANITIZE_STRING);
+    if (json_last_error() != JSON_ERROR_NONE ||
+        !isset($bid->{'product'}) ||
+        !isset($bid->{'amount'}) ||
+        !isset($bid->{'price'})
+    ) {
+        return badRequest($response);
+    }
+
+    $product = trim(filter_var($bid->{'product'}, FILTER_SANITIZE_STRING));
     $amount = filter_var($bid->{'amount'}, FILTER_VALIDATE_INT);
+    if ($amount == false || $amount <= 0 || $amount > 1000000) {
+        return badRequest($response);
+    }
     $price = filter_var($bid->{'price'}, FILTER_VALIDATE_FLOAT);
-    if ($amount == false) {
+    if ($price == false || $price <= 0 || $price > 1000000) {
         return badRequest($response);
     }
 
