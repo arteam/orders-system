@@ -127,6 +127,12 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             return notFound($response);
         }
 
+        // Ok, time to move the money to our account
+        // The transaction can't fail provided hardware and network are reliable.
+        // For the sake of simplicity we don't handle this this case.
+        payToContractor($contractorId, $bid['price']);
+
+
     } catch (PDOException $e) {
         return handleError($response);
     }
@@ -280,6 +286,26 @@ function getContractorId($contractorSessionId)
     $stmt = null;
     $pdo = null;
     return $contractorId;
+}
+
+/**
+ * Charge some funds from the customer account
+ *
+ * @param $contractorId
+ * @param $sum
+ */
+function payToContractor($contractorId, $sum)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("update contractors set amount = amount + :sum
+                           where id = :id");
+    $stmt->bindColumn(":id", $contractorId, PDO::PARAM_INT);
+    $stmt->bindColumn(":sum", $sum);
+    $stmt->execute();
+
+    $stmt = null;
+    $pdo = null;
 }
 
 /**
