@@ -120,8 +120,12 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             return notFound($response);
         }
 
-        // Let's check if the customer has enough money to pay us
-
+        // We won the bid! Let's charge money from the customer
+        $success = chargeCustomer($bid['customer_id'], $bid['price']);
+        if ($success === false) {
+            // The lousy miser customer doesn't have enough money to pay.
+            return notFound($response);
+        }
 
     } catch (PDOException $e) {
         return handleError($response);
@@ -224,6 +228,33 @@ function getCustomerId($customerSessionId)
     $stmt = null;
     $customersPdo = null;
     return $customerId;
+}
+
+/**
+ * Charge some funds from the customer account
+ *
+ * @param $customerId
+ * @param $charge
+ * @return bool
+ */
+function chargeCustomer($customerId, $sum)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("update customers set amount = amount - :sum
+                           where id = :id
+                           and amount >= :sum");
+    $stmt->bindColumn(":id", $customerId);
+    $stmt->bindColumn(":sum", $sum);
+    $stmt->execute();
+    $updatedRows = $stmt->rowCount();
+
+    $stmt = null;
+    $pdo = null;
+    if ($updatedRows == 0) {
+        return false;
+    }
+    return true;
 }
 
 /**
