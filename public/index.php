@@ -71,6 +71,34 @@ $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     }
 });
 
+/**
+ * Place a new bid from a customer
+ */
+$app->post('/api/bids/place', function (Request $request, Response $response) {
+    $customerSessionId = $request->getCookieParams()["cst_session_id"];
+    if (!isset($customerSessionId)) {
+        return forbidden($response);
+    }
+
+    $customerId = getCustomerId($customerSessionId);
+    if (!isset($customerId)) {
+        return forbidden($response);
+    }
+
+    $bid = json_decode($request->getBody());
+    list($product, $amount, $price) = parseBid($bid);
+    if (!isset($product)) {
+        return badRequest($response);
+    }
+
+    $bidId = insertBid($product, $amount, $price, $customerId);
+
+    $response->getBody()->write("api/bids/$bidId");
+    return $response->withStatus(201);
+});
+$app->run();
+
+
 $app->post('/api/contractors/register', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams('contractors');
     // Generate a secure random id
@@ -87,6 +115,7 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
     return $response->withStatus(201)
         ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; Path=/");
 });
+
 $app->post('/api/customers/register', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams('customers');
     // Random secure session id
@@ -105,47 +134,65 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
 });
 
 /**
- * Place a new bid from a customer
+ * Get a customer id by the provided session
+ *
+ * @param $customerSessionId
+ * @return null
  */
-$app->post('/api/bids/place', function (Request $request, Response $response) {
-    $customerSessionId = $request->getCookieParams()["cst_session_id"];
-    if ($customerSessionId == null) {
-        return returnForbidden($response);
-    }
-
+function getCustomerId($customerSessionId)
+{
     list($dbName, $user, $pass) = getDbConnectionParams('customers');
     $customersPdo = buildPDO($dbName, $user, $pass);
     $stmt = $customersPdo->prepare("select id from customers where session_id=:session_id");
     $stmt->bindParam(':session_id', $customerSessionId);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    $customerId = $row['id'];
-    if ($customerId == null || $customerId == 0) {
-        return returnForbidden($response);
+    if (!isset($row)) {
+        return null;
     }
-
+    $customerId = $row['id'];
     $stmt = null;
     $customersPdo = null;
+    return $customerId;
+}
 
-    $bid = json_decode($request->getBody());
-    if (json_last_error() != JSON_ERROR_NONE ||
-        !isset($bid->{'product'}) ||
-        !isset($bid->{'amount'}) ||
-        !isset($bid->{'price'})
+/**
+ * Parse and validate the provided JSON bid
+ *
+ * @param $bid
+ * @return array|null
+ */
+function parseBid($bid)
+{
+    if (!isset($bid) || !isset($bid->{'product'}) ||
+        !isset($bid->{'amount'}) || !isset($bid->{'price'})
     ) {
-        return badRequest($response);
+        return null;
     }
 
     $product = trim(filter_var($bid->{'product'}, FILTER_SANITIZE_STRING));
     $amount = filter_var($bid->{'amount'}, FILTER_VALIDATE_INT);
     if ($amount == false || $amount <= 0 || $amount > 1000000) {
-        return badRequest($response);
+        return null;
     }
     $price = filter_var($bid->{'price'}, FILTER_VALIDATE_FLOAT);
     if ($price == false || $price <= 0 || $price > 1000000) {
-        return badRequest($response);
+        return null;
     }
+    return array($product, $amount, $price);
+}
 
+/**
+ * Insert a new bid to the DB and return its id
+ *
+ * @param $product
+ * @param $amount
+ * @param $price
+ * @param $customerId
+ * @return string
+ */
+function insertBid($product, $amount, $price, $customerId)
+{
     list($dbName, $user, $pass) = getDbConnectionParams('bids');
     $bidsPdo = buildPDO($dbName, $user, $pass);
     $bidsStmt = $bidsPdo->prepare("insert into bids(product, amount, price, customer_id, place_time) values
@@ -160,18 +207,15 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
 
     $bidsStmt = null;
     $bidsPdo = null;
-
-    $response->getBody()->write("api/bids/$bidId");
-    return $response->withStatus(201);
-});
-$app->run();
+    return $bidId;
+}
 
 
 /**
  * @param Response $response
  * @return MessageInterface
  */
-function returnForbidden(Response $response)
+function forbidden(Response $response)
 {
     $response->getBody()->write(json_encode(array("code" => 403, "message" => "Forbidden")));
     return $response
