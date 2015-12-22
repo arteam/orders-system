@@ -53,7 +53,6 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode($bids));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
-        print $e;
         return handleError($response);
     }
 });
@@ -95,10 +94,14 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
         return badRequest($response);
     }
 
-    $bidId = insertBid($product, $amount, $price, $customerId);
+    try {
+        $bidId = insertBid($product, $amount, $price, $customerId);
+        $response->getBody()->write("api/bids/$bidId");
+        return $response->withStatus(201);
+    } catch (PDOException $e) {
+        return handleError($response);
+    }
 
-    $response->getBody()->write("api/bids/$bidId");
-    return $response->withStatus(201);
 });
 
 // CONTRACTORS
