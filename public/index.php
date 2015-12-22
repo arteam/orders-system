@@ -132,6 +132,11 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         // For the sake of simplicity we don't handle this this case.
         payToContractor($contractorId, $bid['price']);
 
+        // Write an entry in the journal that we won the bid and got our money
+        // from the customer.
+        insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
+            $bid['place_time'], $contractorId);
+
 
     } catch (PDOException $e) {
         return handleError($response);
@@ -417,6 +422,39 @@ function getBidAndDeleteItWithoutCommit($bidId)
         $pdo = null;
         return null;
     }
+}
+
+/**
+ * Insert a new fulfillment
+ *
+ * @param $bidId
+ * @param $product
+ * @param $amount
+ * @param $price
+ * @param $customerId
+ * @param $placeTime
+ * @param $contractorId
+ */
+function insertFulfillment($bidId, $product, $amount, $price, $customerId, $placeTime, $contractorId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('fulfillments');
+    $pdo = buildPDO($dbName, $user, $pass);
+
+    $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, customer_id, place_time,
+                   fullfill_time, contractor_id) values
+                   (:bid_id, :product, :amount, :price, :customer_id, :place_time, now(), :contractor_id)");
+    $stmt->bindColumn(":bid_id", $bidId, PDO::PARAM_INT);
+    $stmt->bindColumn(":product", $product);
+    $stmt->bindColumn(":amount", $amount, PDO::PARAM_INT);
+    $stmt->bindColumn(":price", $price);
+    $stmt->bindColumn(":customer_id", $customerId);
+    $stmt->bindColumn(":place_time", $placeTime);
+    $stmt->bindColumn(":contractor_id", $contractorId);
+
+    $stmt->execute();
+
+    $stmt = null;
+    $pdo = null;
 }
 
 /**
