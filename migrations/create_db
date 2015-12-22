@@ -1,7 +1,7 @@
 #!/bin/bash
 # Create users and databases
 
-CREATE_DB_SCRIPT='./init/create.sql'
+CREATE_DB_SCRIPT='./sql/init/create.sql'
 
 [[ -z "$OS_USER"     ]] && { echo "OS_USER is not set"     && exit 1; }
 [[ -z "$OS_PASSWORD" ]] && { echo "OS_PASSWORD is not set" && exit 1; }
