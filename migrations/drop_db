@@ -1,7 +1,7 @@
 #!/bin/bash
 # Drop users and databases
 
-DROP_SCRIPT='./init/drop.sql'
+DROP_SCRIPT='./sql/init/drop.sql'
 
 [[ -z "$OS_USER" ]] && { echo "OS_USER is not set" && exit 1; }
 [[ "$EUID" -ne 0 ]] && { echo "Not the root user"  && exit 1; }
