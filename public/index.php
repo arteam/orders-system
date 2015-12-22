@@ -9,6 +9,9 @@ $app = new \Slim\App;
 $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write(file_get_contents("index.html"));
 });
+
+// CUSTOMERS
+
 $app->get('/api/customers', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams("customers");
 
@@ -24,22 +27,37 @@ $app->get('/api/customers', function (Request $request, Response $response) {
         return handleError($response);
     }
 });
-$app->get('/api/bids', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams("bids");
 
+$app->post('/api/customers/register', function (Request $request, Response $response) {
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    // Random secure session id
+    $sessionId = base64_encode(openssl_random_pseudo_bytes(32));
+
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 0.0)");
+    $stmt->bindParam(":session_id", $sessionId);
+    $stmt->execute();
+    $stmt = null;
+    $pdo = null;
+
+    $response->getBody()->write("api/customers/profile");
+    return $response->withStatus(201)
+        ->withHeader('Set-Cookie', "cst_session_id=$sessionId; Path=/");
+});
+
+// BIDS
+
+$app->get('/api/bids', function (Request $request, Response $response) {
     try {
-        $pdo = buildPDO($dbName, $user, $pass);
-        $stmt = $pdo->query("select id, product, amount, price, customer_id, place_time from bids");
-        $bids = json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-        $stmt = null;
-        $pdo = null;
-        $response->getBody()->write($bids);
+        $bids = getBids();
+        $response->getBody()->write(json_encode($bids));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         print $e;
         return handleError($response);
     }
 });
+
 $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     $id = $request->getAttribute("id");
 
@@ -47,33 +65,19 @@ $app->get('/api/bids/{id}', function (Request $request, Response $response) {
         return badRequest($response);
     }
 
-    list($dbName, $user, $pass) = getDbConnectionParams('bids');
     try {
-        $pdo = buildPDO($dbName, $user, $pass);
-        $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
-                               where id=:id');
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-
-        $bid = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($bid == null) {
-            $response->getBody()->write(json_encode(array("code" => 404, "message" => "Not Found")));
-            return $response
-                ->withStatus(404)
-                ->withHeader('Content-Type', 'application/json');
+        $bid = getBidById($id);
+        if (!isset($bid)) {
+            return notFound($response);
         }
+
         $response->getBody()->write(json_encode($bid));
-        $stmt = null;
-        $pdo = null;
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         return handleError($response);
     }
 });
 
-/**
- * Place a new bid from a customer
- */
 $app->post('/api/bids/place', function (Request $request, Response $response) {
     $customerSessionId = $request->getCookieParams()["cst_session_id"];
     if (!isset($customerSessionId)) {
@@ -96,8 +100,8 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $response->getBody()->write("api/bids/$bidId");
     return $response->withStatus(201);
 });
-$app->run();
 
+// CONTRACTORS
 
 $app->post('/api/contractors/register', function (Request $request, Response $response) {
     list($dbName, $user, $pass) = getDbConnectionParams('contractors');
@@ -116,45 +120,8 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
         ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; Path=/");
 });
 
-$app->post('/api/customers/register', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams('customers');
-    // Random secure session id
-    $sessionId = base64_encode(openssl_random_pseudo_bytes(32));
+$app->run();
 
-    $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 0.0)");
-    $stmt->bindParam(":session_id", $sessionId);
-    $stmt->execute();
-    $stmt = null;
-    $pdo = null;
-
-    $response->getBody()->write("api/customers/profile");
-    return $response->withStatus(201)
-        ->withHeader('Set-Cookie', "cst_session_id=$sessionId; Path=/");
-});
-
-/**
- * Get a customer id by the provided session
- *
- * @param $customerSessionId
- * @return null
- */
-function getCustomerId($customerSessionId)
-{
-    list($dbName, $user, $pass) = getDbConnectionParams('customers');
-    $customersPdo = buildPDO($dbName, $user, $pass);
-    $stmt = $customersPdo->prepare("select id from customers where session_id=:session_id");
-    $stmt->bindParam(':session_id', $customerSessionId);
-    $stmt->execute();
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!isset($row)) {
-        return null;
-    }
-    $customerId = $row['id'];
-    $stmt = null;
-    $customersPdo = null;
-    return $customerId;
-}
 
 /**
  * Parse and validate the provided JSON bid
@@ -180,6 +147,68 @@ function parseBid($bid)
         return null;
     }
     return array($product, $amount, $price);
+}
+
+/**
+ * Get a customer id by the provided session
+ *
+ * @param $customerSessionId
+ * @return null
+ */
+function getCustomerId($customerSessionId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    $customersPdo = buildPDO($dbName, $user, $pass);
+    $stmt = $customersPdo->prepare("select id from customers where session_id=:session_id");
+    $stmt->bindParam(':session_id', $customerSessionId);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!isset($row)) {
+        return null;
+    }
+    $customerId = $row['id'];
+    $stmt = null;
+    $customersPdo = null;
+    return $customerId;
+}
+
+/**
+ * Get a list of bids
+ * @return array
+ */
+function getBids()
+{
+    list($dbName, $user, $pass) = getDbConnectionParams("bids");
+
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->query("select id, product, amount, price, customer_id, place_time from bids");
+    $bids = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = null;
+    $pdo = null;
+    return $bids;
+}
+
+/**
+ * @param $id
+ * @return mixed|null
+ */
+function getBidById($id)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('bids');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
+                               where id=:id');
+    $stmt->bindParam(':id', $id);
+    $stmt->execute();
+
+    $bid = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($bid === false) {
+        return null;
+    }
+
+    $stmt = null;
+    $pdo = null;
+    return $bid;
 }
 
 /**
@@ -233,6 +262,18 @@ function badRequest(Response $response)
     $response->getBody()->write(json_encode(array("code" => 400, "message" => "Bad request")));
     return $response
         ->withStatus(400)
+        ->withHeader('Content-Type', 'application/json');
+}
+
+/**
+ * @param Response $response
+ * @return MessageInterface
+ */
+function notFound(Response $response)
+{
+    $response->getBody()->write(json_encode(array("code" => 404, "message" => "Not Found")));
+    return $response
+        ->withStatus(404)
         ->withHeader('Content-Type', 'application/json');
 }
 
