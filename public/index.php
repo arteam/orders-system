@@ -96,6 +96,39 @@ $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     }
 });
 
+$app->post('/api/bids/{id}/take', function (Request $request, Response $response) {
+    $id = $request->getAttribute("id");
+    if (!is_numeric($id)) {
+        return badRequest($response);
+    }
+
+    try {
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
+        if (!isset($contractorSessionId)) {
+            return forbidden($response);
+        }
+
+        $contractorId = getContractorId($contractorSessionId);
+        if (!isset($contractorId)) {
+            return forbidden($response);
+        }
+
+        // Trying to take the order before anyone!
+        list($bidsPdo, $bid) = getBidAndDeleteItWithoutCommit($id);
+        if (!isset($bidsPdo)) {
+            // Someone has already taken the order, what a bummer.
+            return notFound($response);
+        }
+
+        // Let's check if the customer has enough money to pay us
+
+
+    } catch (PDOException $e) {
+        return handleError($response);
+    }
+});
+
+
 $app->post('/api/bids/place', function (Request $request, Response $response) {
     $customerSessionId = $request->getCookieParams()["cst_session_id"];
     if (!isset($customerSessionId)) {
@@ -244,7 +277,7 @@ function getBidById($id)
     $pdo = buildPDO($dbName, $user, $pass);
     $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
                                where id=:id');
-    $stmt->bindParam(':id', $id);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     $stmt->execute();
 
     $bid = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -285,6 +318,49 @@ function insertBid($product, $amount, $price, $customerId)
     return $bidId;
 }
 
+/**
+ * Get a bid with the provided id and delete it without commit.
+ * Return the current PDO context and the bid or null, if the bid is not
+ * exist or has already been deleted.
+ *
+ * @param $bidId
+ * @return null|PDO
+ */
+function getBidAndDeleteItWithoutCommit($bidId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('bids');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $pdo->beginTransaction();
+
+    // Read the bid row
+    $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
+                           where id=:id');
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+    $bid = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = null;
+    if ($bid === false) {
+        // The bid is not exist
+        $pdo->rollBack();
+        $pdo = null;
+        return null;
+    }
+
+    // Acquire a write lock on the row, while the transaction is not committed
+    $stmt = $pdo->prepare("delete from bids where id=:id");
+    $stmt->bindParam(':id', $bidId, PDO::PARAM_INT);
+    $stmt->execute();
+    $rowCount = $stmt->rowCount();
+    $stmt = null;
+    if ($rowCount > 0) {
+        return array($pdo, $bid);
+    } else {
+        // The bid has already been deleted
+        $pdo->rollBack();
+        $pdo = null;
+        return null;
+    }
+}
 
 /**
  * @param Response $response
