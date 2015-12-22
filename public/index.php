@@ -42,11 +42,9 @@ $app->get('/api/bids', function (Request $request, Response $response) {
 });
 $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     $id = $request->getAttribute("id");
+
     if (!is_numeric($id)) {
-        $response->getBody()->write(json_encode(array("code" => 400, "message" => "Bad request")));
-        return $response
-            ->withStatus(400)
-            ->withHeader('Content-Type', 'application/json');
+        return badRequest($response);
     }
 
     list($dbName, $user, $pass) = getDbConnectionParams('bids');
@@ -130,9 +128,12 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $customersPdo = null;
 
     $bid = json_decode($request->getBody());
-    $product = $bid->{'product'};
-    $amount = $bid->{'amount'};
-    $price = $bid->{'price'};
+    $product = filter_var(trim($bid->{'product'}), FILTER_SANITIZE_STRING);
+    $amount = filter_var($bid->{'amount'}, FILTER_VALIDATE_INT);
+    $price = filter_var($bid->{'price'}, FILTER_VALIDATE_FLOAT);
+    if ($amount == false) {
+        return badRequest($response);
+    }
 
     list($dbName, $user, $pass) = getDbConnectionParams('bids');
     $bidsPdo = buildPDO($dbName, $user, $pass);
@@ -164,6 +165,19 @@ function returnForbidden(Response $response)
     $response->getBody()->write(json_encode(array("code" => 403, "message" => "Forbidden")));
     return $response
         ->withStatus(403)
+        ->withHeader('Content-Type', 'application/json');
+}
+
+
+/**
+ * @param Response $response
+ * @return MessageInterface
+ */
+function badRequest(Response $response)
+{
+    $response->getBody()->write(json_encode(array("code" => 400, "message" => "Bad request")));
+    return $response
+        ->withStatus(400)
         ->withHeader('Content-Type', 'application/json');
 }
 
