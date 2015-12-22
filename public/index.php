@@ -49,6 +49,16 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
 
 $app->get('/api/bids', function (Request $request, Response $response) {
     try {
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
+        if (!isset($contractorSessionId)) {
+            return forbidden($response);
+        }
+
+        $contractorId = getContractorId($contractorSessionId);
+        if (!isset($contractorId)) {
+            return forbidden($response);
+        }
+
         $bids = getBids();
         $response->getBody()->write(json_encode($bids));
         return $response->withHeader('Content-Type', 'application/json');
@@ -59,12 +69,21 @@ $app->get('/api/bids', function (Request $request, Response $response) {
 
 $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     $id = $request->getAttribute("id");
-
     if (!is_numeric($id)) {
         return badRequest($response);
     }
 
     try {
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
+        if (!isset($contractorSessionId)) {
+            return forbidden($response);
+        }
+
+        $contractorId = getContractorId($contractorSessionId);
+        if (!isset($contractorId)) {
+            return forbidden($response);
+        }
+
         $bid = getBidById($id);
         if (!isset($bid)) {
             return notFound($response);
@@ -155,7 +174,7 @@ function parseBid($bid)
 /**
  * Get a customer id by the provided session
  *
- * @param $customerSessionId|null
+ * @param $customerSessionId |null
  * @return null
  */
 function getCustomerId($customerSessionId)
@@ -173,6 +192,31 @@ function getCustomerId($customerSessionId)
     $stmt = null;
     $customersPdo = null;
     return $customerId;
+}
+
+/**
+ * Get a contractor id by the provided session id
+ *
+ * @param $contractorSessionId
+ * @return null
+ */
+function getContractorId($contractorSessionId)
+{
+    error_log($contractorSessionId);
+    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("select id from contractors where session_id=:session_id");
+    $stmt->bindParam(':session_id', $contractorSessionId);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    error_log($row);
+    if ($row === false) {
+        return null;
+    }
+    $contractorId = $row['id'];
+    $stmt = null;
+    $pdo = null;
+    return $contractorId;
 }
 
 /**
