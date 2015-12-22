@@ -152,7 +152,7 @@ function parseBid($bid)
 /**
  * Get a customer id by the provided session
  *
- * @param $customerSessionId
+ * @param $customerSessionId|null
  * @return null
  */
 function getCustomerId($customerSessionId)
@@ -163,7 +163,7 @@ function getCustomerId($customerSessionId)
     $stmt->bindParam(':session_id', $customerSessionId);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if (!isset($row)) {
+    if ($row === false) {
         return null;
     }
     $customerId = $row['id'];
