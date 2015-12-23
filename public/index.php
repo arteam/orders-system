@@ -298,14 +298,12 @@ function chargeCustomer($customerId, $sum)
  */
 function getContractorId($contractorSessionId)
 {
-    error_log($contractorSessionId);
     list($dbName, $user, $pass) = getDbConnectionParams('contractors');
     $pdo = buildPDO($dbName, $user, $pass);
     $stmt = $pdo->prepare("select id from contractors where session_id=:session_id");
     $stmt->bindParam(':session_id', $contractorSessionId);
     $stmt->execute();
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    error_log($row);
     if ($row === false) {
         return null;
     }
@@ -425,7 +423,7 @@ function getBidAndDeleteItWithoutCommit($bidId)
     // Read the bid row
     $stmt = $pdo->prepare('select id, product, amount, price, customer_id, place_time from bids
                            where id=:id');
-    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->bindParam(':id', $bidId, PDO::PARAM_INT);
     $stmt->execute();
     $bid = $stmt->fetch(PDO::FETCH_ASSOC);
     $stmt = null;
