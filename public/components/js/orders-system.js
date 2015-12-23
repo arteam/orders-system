@@ -4,3 +4,9 @@ $("#registry-contractor").click(function () {
     });
 });
 
+$("#registry-customer").click(function () {
+    $.post('api/customers/register', function () {
+        window.location.replace("customer/bids/place");
+    });
+});
+
