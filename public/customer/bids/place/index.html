@@ -4,8 +4,8 @@
     <title>Place a bid</title>
     <link rel="stylesheet" href="../../../components/pure/pure-min.css">
     <link rel="stylesheet" href="../../../components/pure/base-min.css">
+    <link rel="stylesheet" href="../../../components/sweetalert/dist/sweetalert.css">
 </head>
-<body>
 
 <form id="bid-form" class="pure-form pure-form-aligned" style="padding: 2em">
     <fieldset>
@@ -18,12 +18,12 @@
 
         <div class="pure-control-group">
             <label for="amount">Amount</label>
-            <input id="amount" required>
+            <input id="amount" type="number">
         </div>
 
         <div class="pure-control-group">
             <label for="price">Price</label>
-            <input id="price" required>
+            <input id="price" placeholder="0.00" required>
         </div>
         <div class="pure-controls">
             <button id="place-bid" type="button" class="pure-button pure-button-primary">Place</button>
@@ -31,8 +31,8 @@
     </fieldset>
 </form>
 <script src="../../../components/jquery/dist/jquery.min.js"></script>
+<script src="../../../components/sweetalert/dist/sweetalert.min.js"></script>
 <script src="../../../components/js/customer-bids-place.js"></script>
-
 
 </body>
 </html>
