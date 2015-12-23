@@ -7,6 +7,15 @@ $(document).ready(function () {
 });
 
 $("#place-bid").click(function () {
+    placeBid()
+});
+$("#bid-form").on('keypress', function (event) {
+    if (event.keyCode == 13) {
+        placeBid();
+    }
+});
+
+function placeBid() {
     var product = $("#product").val().trim();
     if (!validateProduct(product)) {
         return;
@@ -30,7 +39,7 @@ $("#place-bid").click(function () {
     }).fail(function () {
         sweetAlert('Server error', 'Unable to place the bid', 'error');
     });
-});
+}
 
 /**
  * Validates that product is set and contains safe symbols
