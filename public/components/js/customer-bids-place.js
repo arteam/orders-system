@@ -1,4 +1,4 @@
-var productRegexp = new RegExp('^[a-zA-Z0-9а-яА-Я\'"\s]+$');
+var productRegexp = new RegExp('^[a-zA-Z0-9а-яА-Я\'"\\\s]+$');
 var amountRegexp = new RegExp('^[0-9]+$');
 var priceRegexp = new RegExp('^-?[0-9]+(\.[0-9]+)?$');
 
@@ -55,6 +55,7 @@ function validateProduct(product) {
         sweetAlert('Validation error', 'Product name is too big', 'error');
         return false;
     }
+    console.log(product);
     if (!productRegexp.test(product)) {
         sweetAlert('Validation error', 'Wrong product name format', 'error');
         return false;
