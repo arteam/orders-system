@@ -96,6 +96,23 @@ class BidTest extends AppTest
         $this->assertTrue($this->startsWith($uri, 'api/bids/'));
     }
 
+    public function testPlaceBidWithEmptyProduct()
+    {
+        $res = $this->client->request('POST', 'api/bids/place', [
+            'json' => [
+                'product' => ' ',
+                'amount' => -1,
+                'price' => 50.5
+            ],
+            'headers' => [
+                'Cookie' => 'cst_session_id=3vsN7oENgh7BdZYzwr/GkqqJt6ZWb7WD'
+            ],
+            'http_errors' => false,
+        ]);
+
+        $this->assertEquals('400', $res->getStatusCode());
+    }
+
     public function testPlaceBidWithoutSession()
     {
         $res = $this->client->request('POST', 'api/bids/place', [
