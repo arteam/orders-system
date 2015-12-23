@@ -229,6 +229,10 @@ function parseBid($bid)
     }
 
     $product = trim(filter_var($bid->{'product'}, FILTER_SANITIZE_STRING));
+    if (empty($product) || strlen($product) > 32) {
+        return null;
+    }
+
     $amount = filter_var($bid->{'amount'}, FILTER_VALIDATE_INT);
     if ($amount == false || $amount <= 0 || $amount > 1000000) {
         return null;
