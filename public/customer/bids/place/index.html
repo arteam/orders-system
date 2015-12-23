@@ -5,7 +5,7 @@
 </head>
 <body>
 
-<form>
+<form id="bid-form">
     <fieldset>
         <legend>Bid</legend>
 
@@ -15,9 +15,13 @@
         <label for="amount">Amount</label>
         <input id="amount">
 
-        <button type="submit">Place</button>
+        <label for="price">Price</label>
+        <input id="price">
+
     </fieldset>
 </form>
+
+<button id="place-bid" type="button">Place</button>
 
 <script src="../../../components/jquery/dist/jquery.min.js"></script>
 <script src="../../../components/js/customer-bids-place.js"></script>
