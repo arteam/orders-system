@@ -1,5 +1,6 @@
 var productRegexp = new RegExp('^[a-zA-Z0-9а-яА-Я\'"\s]+$');
 var amountRegexp = new RegExp('^[0-9]+$');
+var priceRegexp = new RegExp('^-?[0-9]+(\.[0-9]+)?$');
 
 $(document).ready(function () {
     // TODO checkIfSessionExists
@@ -16,11 +17,14 @@ $("#place-bid").click(function () {
         return;
     }
 
-    var price = $("#price").val();
+    var textPrice = $("#price").val();
+    if (!validatePrice(textPrice)) {
+        return;
+    }
     $.post('/api/bids/place', JSON.stringify({
         "product": product,
         "amount": parseInt(textAmount),
-        "price": price
+        "price": parseFloat(textPrice).toFixed(2)
     })).success(function () {
         alert("Placed!")
     }).fail(function () {
@@ -70,6 +74,27 @@ function validateAmount(textAmount) {
     }
     if (amountAsNumber > 1000) {
         sweetAlert('Validation error', 'Amount should be less than 100', 'error');
+        return false;
+    }
+    return true;
+}
+
+function validatePrice(textPrice) {
+    if (textPrice.length == 0) {
+        sweetAlert('Validation error', 'Price is not set', 'error');
+        return false;
+    }
+    if (!priceRegexp.test(textPrice)) {
+        sweetAlert('Validation error', 'Price is not a real number', 'error');
+        return false;
+    }
+    var priceAsNumber = parseFloat(textPrice);
+    if (priceAsNumber <= 0) {
+        sweetAlert('Validation error', 'Price should be greater than 0', 'error');
+        return false;
+    }
+    if (priceAsNumber > 10000) {
+        sweetAlert('Validation error', 'Price should be less or equal than 10000', 'error');
         return false;
     }
     return true;
