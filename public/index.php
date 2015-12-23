@@ -325,11 +325,11 @@ function payToContractor($contractorId, $sum)
 {
     list($dbName, $user, $pass) = getDbConnectionParams('contractors');
     $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("update contractors set amount = amount + :sum
+    $stmt = $pdo->prepare("update contractors set amount = (amount + :sum)
                            where id = :id");
     try {
-        $stmt->bindColumn(":id", $contractorId, PDO::PARAM_INT);
-        $stmt->bindColumn(":sum", $sum);
+        $stmt->bindParam(":id", $contractorId, PDO::PARAM_INT);
+        $stmt->bindParam(":sum", $sum);
         return $stmt->execute();
     } catch (PDOException $e) {
         error_log("Unable to pay to a contractor $contractorId. Error: " . $e);
