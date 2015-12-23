@@ -122,8 +122,9 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         }
 
         // We won the bid! Let's charge money from the customer
-        $success = chargeCustomer($bid['customer_id'], $bid['price']);
-        if ($success === false) {
+        $customerId = $bid['customer_id'];
+        $sum = $bid['price'];
+        if (!chargeCustomer($customerId, $sum)) {
             $bidsPdo->rollback();
             // The lousy miser customer doesn't have enough money to pay.
             return notFound($response);
@@ -132,15 +133,18 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         // Ok, time to move the money to our account
         // The transaction can't fail provided hardware and network are reliable.
         // For the sake of simplicity we don't handle this this case.
-        payToContractor($contractorId, $bid['price']);
+        if (!payToContractor($contractorId, $bid['price'])) {
+            $bidsPdo->rollback();
+            error_log("Issue refund to $customerId on sum $sum");
+            return internalError($response);
+        }
 
         // Write an entry in the journal that we won the bid and got our money
         // from the customer.
         insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
             $bid['place_time'], $contractorId);
 
-        $commitSuccess = $bidsPdo->commit();
-        if ($commitSuccess === false) {
+        if (!$bidsPdo->commit()) {
             return notFound($response);
         }
 
@@ -304,6 +308,7 @@ function getContractorId($contractorSessionId)
  *
  * @param $contractorId
  * @param $sum
+ * @return boolean
  */
 function payToContractor($contractorId, $sum)
 {
@@ -311,12 +316,17 @@ function payToContractor($contractorId, $sum)
     $pdo = buildPDO($dbName, $user, $pass);
     $stmt = $pdo->prepare("update contractors set amount = amount + :sum
                            where id = :id");
-    $stmt->bindColumn(":id", $contractorId, PDO::PARAM_INT);
-    $stmt->bindColumn(":sum", $sum);
-    $stmt->execute();
-
-    $stmt = null;
-    $pdo = null;
+    try {
+        $stmt->bindColumn(":id", $contractorId, PDO::PARAM_INT);
+        $stmt->bindColumn(":sum", $sum);
+        return $stmt->execute();
+    } catch (PDOException $e) {
+        error_log("Unable to pay to a contractor $contractorId. Error: " . $e);
+        return false;
+    } finally {
+        $stmt = null;
+        $pdo = null;
+    }
 }
 
 /**
@@ -497,6 +507,18 @@ function notFound(Response $response)
     $response->getBody()->write(json_encode(array("code" => 404, "message" => "Not Found")));
     return $response
         ->withStatus(404)
+        ->withHeader('Content-Type', 'application/json');
+}
+
+/**
+ * @param Response $response
+ * @return MessageInterface
+ */
+function internalError(Response $response)
+{
+    $response->getBody()->write(json_encode(array("code" => 500, "message" => "Internal error")));
+    return $response
+        ->withStatus(500)
         ->withHeader('Content-Type', 'application/json');
 }
 
