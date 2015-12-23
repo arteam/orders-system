@@ -3,8 +3,14 @@ var amountRegexp = new RegExp('^[0-9]+$');
 var priceRegexp = new RegExp('^-?[0-9]+(\.[0-9]+)?$');
 
 $(document).ready(function () {
-    // TODO checkIfSessionExists
+    if (getCustomerSession().length == 0) {
+       window.location = '/'
+    }
 });
+
+function getCustomerSession() {
+    return document.cookie.replace(/(?:(?:^|.*;\s*)cst_session_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+}
 
 $("#place-bid").click(function () {
     placeBid()
