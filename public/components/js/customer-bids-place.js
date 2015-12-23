@@ -26,9 +26,9 @@ $("#place-bid").click(function () {
         "amount": parseInt(textAmount),
         "price": parseFloat(textPrice).toFixed(2)
     })).success(function () {
-        alert("Placed!")
+        sweetAlert('Success', "Bid has been placed!")
     }).fail(function () {
-        alert("Error");
+        sweetAlert('Server error', 'Unable to place the bid', 'error');
     });
 });
 
