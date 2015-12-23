@@ -135,14 +135,20 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         // For the sake of simplicity we don't handle this this case.
         if (!payToContractor($contractorId, $bid['price'])) {
             $bidsPdo->rollback();
-            error_log("Issue refund to $customerId on sum $sum");
+            error_log("Issue refund to customerId=$customerId on sum=$sum");
             return internalError($response);
         }
 
         // Write an entry in the journal that we won the bid and got our money
         // from the customer.
-        insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
-            $bid['place_time'], $contractorId);
+        if (!insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
+            $bid['place_time'], $contractorId)
+        ) {
+            $bidsPdo->rollback();
+            error_log("Issue refund to customerId=$customerId on sum=$sum");
+            error_log("Take funds from contractorId=$customerId on sum=$sum");
+            return internalError($response);
+        };
 
         if (!$bidsPdo->commit()) {
             return notFound($response);
@@ -450,27 +456,34 @@ function getBidAndDeleteItWithoutCommit($bidId)
  * @param $customerId
  * @param $placeTime
  * @param $contractorId
+ * @return  boolean
  */
 function insertFulfillment($bidId, $product, $amount, $price, $customerId, $placeTime, $contractorId)
 {
     list($dbName, $user, $pass) = getDbConnectionParams('fulfillments');
     $pdo = buildPDO($dbName, $user, $pass);
 
-    $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, customer_id, place_time,
+    try {
+        $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, customer_id, place_time,
                    fullfill_time, contractor_id) values
                    (:bid_id, :product, :amount, :price, :customer_id, :place_time, now(), :contractor_id)");
-    $stmt->bindColumn(":bid_id", $bidId, PDO::PARAM_INT);
-    $stmt->bindColumn(":product", $product);
-    $stmt->bindColumn(":amount", $amount, PDO::PARAM_INT);
-    $stmt->bindColumn(":price", $price);
-    $stmt->bindColumn(":customer_id", $customerId);
-    $stmt->bindColumn(":place_time", $placeTime);
-    $stmt->bindColumn(":contractor_id", $contractorId);
+        $stmt->bindColumn(":bid_id", $bidId, PDO::PARAM_INT);
+        $stmt->bindColumn(":product", $product);
+        $stmt->bindColumn(":amount", $amount, PDO::PARAM_INT);
+        $stmt->bindColumn(":price", $price);
+        $stmt->bindColumn(":customer_id", $customerId);
+        $stmt->bindColumn(":place_time", $placeTime);
+        $stmt->bindColumn(":contractor_id", $contractorId);
 
-    $stmt->execute();
-
-    $stmt = null;
-    $pdo = null;
+        return $stmt->execute();
+    } catch (Exception $e) {
+        error_log("Unable to insert a fulfillment with bidId=$bidId from customer=$customerId
+        to contractor=$contractorId", e);
+        return false;
+    } finally {
+        $stmt = null;
+        $pdo = null;
+    }
 }
 
 /**
