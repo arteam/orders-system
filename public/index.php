@@ -151,7 +151,10 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         };
 
         if (!$bidsPdo->commit()) {
-            return notFound($response);
+            error_log("Issue refund to customerId=$customerId on sum=$sum");
+            error_log("Take funds from contractorId=$customerId on sum=$sum");
+            error_log("Mark fulfillment to bid=$id as invalid");
+            return internalError($response);
         }
 
     } catch (PDOException $e) {
