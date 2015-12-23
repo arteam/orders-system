@@ -9,3 +9,6 @@
 
 # Composer dependencies
 /vendor
+
+# Bower dependencies
+/public/components/vendor

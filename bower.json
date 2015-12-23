@@ -4,11 +4,12 @@
   "ignore": [
     "**/.*",
     "bower_components",
-    "public/components/",
+    "public/components/vendor",
     "tests"
   ],
   "dependencies": {
     "jquery": "~2.1.4",
-    "pure": "~0.6.0"
+    "pure": "~0.6.0",
+    "sweetalert": "~1.1.3"
   }
 }
