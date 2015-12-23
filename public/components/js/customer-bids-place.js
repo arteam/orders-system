@@ -7,17 +7,17 @@ $(document).ready(function () {
 });
 
 $("#place-bid").click(function () {
-    var product = $("#product").val();
+    var product = $("#product").val().trim();
     if (!validateProduct(product)) {
         return;
     }
 
-    var textAmount = $("#amount").val();
+    var textAmount = $("#amount").val().trim();
     if (!validateAmount(textAmount)) {
         return;
     }
 
-    var textPrice = $("#price").val();
+    var textPrice = $("#price").val().trim();
     if (!validatePrice(textPrice)) {
         return;
     }
