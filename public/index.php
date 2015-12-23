@@ -274,11 +274,12 @@ function chargeCustomer($customerId, $sum)
 {
     list($dbName, $user, $pass) = getDbConnectionParams('customers');
     $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("update customers set amount = amount - :sum
+    $stmt = $pdo->prepare("update customers set amount = (amount - :sum1)
                            where id = :id
-                           and amount >= :sum");
-    $stmt->bindColumn(":id", $customerId);
-    $stmt->bindColumn(":sum", $sum);
+                           and amount >= :sum2");
+    $stmt->bindParam(":id", $customerId, PDO::PARAM_INT);
+    $stmt->bindParam(":sum1", $sum);
+    $stmt->bindParam(":sum2", $sum);
     $stmt->execute();
     $updatedRows = $stmt->rowCount();
 
