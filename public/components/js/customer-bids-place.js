@@ -1,15 +1,16 @@
-var productRegexp = new RegExp('^[a-zA-Z0-9а-яА-Я\'"\\\s]+$');
-var amountRegexp = new RegExp('^[0-9]+$');
-var priceRegexp = new RegExp('^-?[0-9]+(\.[0-9]+)?$');
+var productRegexp = /^[a-zA-Z0-9а-яА-Я\'"\\\s]+$/;
+var amountRegexp = /^[0-9]+$/;
+var priceRegexp = /^-?[0-9]+(\.[0-9]+)?$/;
+var customerSessionIdRegexp = /(?:(?:^|.*;\s*)cst_session_id\s*\=\s*([^;]*).*$)|^.*$/;
 
 $(document).ready(function () {
     if (getCustomerSession().length == 0) {
-       window.location = '/'
+        window.location = '/'
     }
 });
 
 function getCustomerSession() {
-    return document.cookie.replace(/(?:(?:^|.*;\s*)cst_session_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    return document.cookie.replace(customerSessionIdRegexp, "$1");
 }
 
 $("#place-bid").click(function () {
