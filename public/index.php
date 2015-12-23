@@ -141,7 +141,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
 
         // Write an entry in the journal that we won the bid and got our money
         // from the customer.
-        if (!insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
+        if (!insertFulfillment($bid['id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
             $bid['place_time'], $contractorId)
         ) {
             $bidsPdo->rollback();
@@ -472,13 +472,13 @@ function insertFulfillment($bidId, $product, $amount, $price, $customerId, $plac
         $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, customer_id, place_time,
                    fullfill_time, contractor_id) values
                    (:bid_id, :product, :amount, :price, :customer_id, :place_time, now(), :contractor_id)");
-        $stmt->bindColumn(":bid_id", $bidId, PDO::PARAM_INT);
-        $stmt->bindColumn(":product", $product);
-        $stmt->bindColumn(":amount", $amount, PDO::PARAM_INT);
-        $stmt->bindColumn(":price", $price);
-        $stmt->bindColumn(":customer_id", $customerId);
-        $stmt->bindColumn(":place_time", $placeTime);
-        $stmt->bindColumn(":contractor_id", $contractorId);
+        $stmt->bindParam(":bid_id", $bidId, PDO::PARAM_INT);
+        $stmt->bindParam(":product", $product);
+        $stmt->bindParam(":amount", $amount, PDO::PARAM_INT);
+        $stmt->bindParam(":price", $price);
+        $stmt->bindParam(":customer_id", $customerId);
+        $stmt->bindParam(":place_time", $placeTime);
+        $stmt->bindParam(":contractor_id", $contractorId);
 
         return $stmt->execute();
     } catch (Exception $e) {
