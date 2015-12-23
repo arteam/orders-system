@@ -114,6 +114,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         }
 
         // Trying to take the order before anyone!
+        // @var GuzzleHttp\Client
         list($bidsPdo, $bid) = getBidAndDeleteItWithoutCommit($id);
         if (!isset($bidsPdo)) {
             // Someone has already taken the order, what a bummer.
@@ -123,6 +124,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         // We won the bid! Let's charge money from the customer
         $success = chargeCustomer($bid['customer_id'], $bid['price']);
         if ($success === false) {
+            $bidsPdo->rollback();
             // The lousy miser customer doesn't have enough money to pay.
             return notFound($response);
         }
@@ -137,6 +139,10 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         insertFulfillment($bid['bid_id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
             $bid['place_time'], $contractorId);
 
+        $commitSuccess = $bidsPdo->commit();
+        if ($commitSuccess === false) {
+            return notFound($response);
+        }
 
     } catch (PDOException $e) {
         return handleError($response);
@@ -386,7 +392,7 @@ function insertBid($product, $amount, $price, $customerId)
  * exist or has already been deleted.
  *
  * @param $bidId
- * @return null|PDO
+ * @return array|null
  */
 function getBidAndDeleteItWithoutCommit($bidId)
 {
