@@ -1,5 +1,5 @@
 $(document).ready(function () {
-    $.get("api/bids", findBids)
+    $.get("/api/bids", findBids)
 });
 
 function findBids(data) {
