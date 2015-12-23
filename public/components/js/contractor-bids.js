@@ -1,5 +1,7 @@
 $(document).ready(function () {
-    $.get("/api/bids", findBids)
+    setInterval(function () {
+        $.get("/api/bids", findBids)
+    }, 2000);
 });
 
 function findBids(data) {
