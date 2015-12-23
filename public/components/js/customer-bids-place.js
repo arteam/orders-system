@@ -16,17 +16,20 @@ $("#bid-form").on('keypress', function (event) {
 });
 
 function placeBid() {
-    var product = $("#product").val().trim();
+    var productInput = $("#product");
+    var product = productInput.val().trim();
     if (!validateProduct(product)) {
         return;
     }
 
-    var textAmount = $("#amount").val().trim();
+    var amountInput = $("#amount");
+    var textAmount = amountInput.val().trim();
     if (!validateAmount(textAmount)) {
         return;
     }
 
-    var textPrice = $("#price").val().trim();
+    var priceInput = $("#price");
+    var textPrice = priceInput.val().trim();
     if (!validatePrice(textPrice)) {
         return;
     }
@@ -38,6 +41,10 @@ function placeBid() {
         sweetAlert('Success', "Bid has been placed!")
     }).fail(function () {
         sweetAlert('Server error', 'Unable to place the bid', 'error');
+    }).done(function () {
+        productInput.val('');
+        amountInput.val('');
+        priceInput.val('');
     });
 }
 
