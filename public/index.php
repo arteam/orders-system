@@ -150,6 +150,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             return internalError($response);
         };
 
+        // We marked that order is fulfilled, so let's commit the bid transaction
         if (!$bidsPdo->commit()) {
             error_log("Issue refund to customerId=$customerId on sum=$sum");
             error_log("Take funds from contractorId=$customerId on sum=$sum");
@@ -157,6 +158,8 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             return internalError($response);
         }
 
+        $response->getBody()->write(json_encode(array("code" => 200, "message" => "OK")));
+        return $response;
     } catch (PDOException $e) {
         return handleError($response);
     }
