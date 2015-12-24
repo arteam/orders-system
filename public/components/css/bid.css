@@ -2,6 +2,11 @@
     background-color: white;
 }
 
+.button-logout {
+    background-color: white;
+    color: #777;
+}
+
 tr:hover {
     background-color: #f2f2f2;
 }
