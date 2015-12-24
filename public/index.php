@@ -248,8 +248,8 @@ $app->get('/api/contractors/profile', function (Request $request, Response $resp
 });
 
 $app->post('/api/logout', function (Request $request, Response $response) {
-    return $response->withHeader('Set-Cookie', 'cnt_session_id=""')
-        ->withHeader('Set-Cookie', 'cst_session_id=""');
+    return $response->withHeader('Set-Cookie', 'cnt_session_id=""; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT')
+        ->withAddedHeader('Set-Cookie', 'cst_session_id=""; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT');
 });
 
 $app->run();
