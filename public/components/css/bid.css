@@ -7,6 +7,11 @@
     color: #777;
 }
 
+.button-place-bid {
+    background-color: #8cd4f5;
+    margin-left: 5px;
+}
+
 tr:hover {
     background-color: #f2f2f2;
 }
