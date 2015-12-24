@@ -12,20 +12,29 @@ function findBids(bids) {
 
     // Grab current bid ids
     var currentBidIds = localStorage['currentBidIds'] != '' ? JSON.parse(localStorage['currentBidIds']) : [];
+    var maxBidId = Math.max.apply(null, currentBidIds);
 
     // Add new bids to the list
     var newBidIds = [];
-    for (var i = 0; i < bids.length; i++) {
+    for (var i = bids.length - 1; i >= 0; i--) {
         var id = parseInt(bids[i].id);
         // If it's a new bid, add to the table with the "fade in" effect
         if (currentBidIds.indexOf(id) < 0) {
-            tbody.append($('<tr>')
+            var tr = $('<tr>')
                 .attr('id', 'row' + id)
                 .append($('<td>').append(id))
                 .append($('<td>').append(bids[i].product))
                 .append($('<td>').append(bids[i].amount))
                 .append($('<td>').append(bids[i].price))
-                .fadeIn(2000));
+                .fadeIn(2000);
+            // If the id is greater than then maximum bid, it's a new bid
+            // and we should place it before the top element. Otherwise it's
+            // an old bid, that should be added after the last element.
+            if (id > maxBidId) {
+                tbody.prepend(tr);
+            } else {
+                tbody.append(tr);
+            }
         }
         newBidIds.push(id);
     }
