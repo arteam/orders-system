@@ -55,9 +55,10 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
     $stmt = null;
     $pdo = null;
 
+    $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
     $response->getBody()->write("api/customers/profile");
     return $response->withStatus(201)
-        ->withHeader('Set-Cookie', "cst_session_id=$sessionId; Path=/");
+        ->withHeader('Set-Cookie', "cst_session_id=$sessionId; path=/; expires=$expires");
 });
 
 // BIDS
@@ -221,9 +222,10 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
     $stmt = null;
     $pdo = null;
 
+    $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
     $response->getBody()->write("api/contractors/profile");
     return $response->withStatus(201)
-        ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; Path=/");
+        ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; path=/; expires=$expires");
 });
 
 $app->get('/api/contractors/profile', function (Request $request, Response $response) {
