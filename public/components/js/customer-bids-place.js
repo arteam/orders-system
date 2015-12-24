@@ -138,6 +138,7 @@ function validatePrice(textPrice) {
 
 function updateBalance() {
     $.get('/api/customer/profile', function (customer) {
+        $('#customer-id').text(customer.id);
         $('#customer-balance').text("$ " + customer.amount);
     });
 }
