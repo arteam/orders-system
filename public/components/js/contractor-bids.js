@@ -1,4 +1,10 @@
 $(document).ready(function () {
+    // If no session, redirect to the main page
+    if (getContractorSession().length == 0) {
+        window.location = '/';
+        return;
+    }
+
     localStorage['currentBidIds'] = '';
     updateContractorVolume();
     $.get("/api/bids", findBids);
@@ -109,4 +115,8 @@ function updateContractorVolume() {
     $.get('/api/contractors/profile', function (contractor) {
         $('#contractor-volume').text('$ ' + contractor.amount);
     });
+}
+
+function getContractorSession() {
+    return document.cookie.replace(/(?:(?:^|.*;\s*)cnt_session_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
 }
