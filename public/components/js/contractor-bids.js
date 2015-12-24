@@ -5,18 +5,19 @@ $(document).ready(function () {
 });
 
 function findBids(data) {
-    // Clear bids
-    var bidsList = $("#bids-list");
-    bidsList.empty();
+    var tbody = $("#bids-table").find("> tbody");
+    if (tbody.length > 0) {
+        // Clear bids
+        tbody.children().remove();
+    }
 
-    // Show bids in a list
+    // Add bids to the list
     for (var i = 0; i < data.length; i++) {
-        var label = $('<label/>')
-            .append(data[i].product)
-            .append(" | ")
-            .append(data[i].amount);
-        var li = $('<li>')
-            .append(label);
-        bidsList.append(li);
+        tbody.append($('<tr>')
+            .append($('<td>').append(data[i].id))
+            .append($('<td>').append(data[i].product))
+            .append($('<td>').append(data[i].amount))
+            .append($('<td>').append(data[i].price))
+        );
     }
 }
