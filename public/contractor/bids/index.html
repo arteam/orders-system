@@ -10,8 +10,16 @@
     <link rel="stylesheet" href="../../components/css/bid.css">
 </head>
 <body>
-<div class="pure-g main">
-    <div class="pure-u-1-2">
+
+<div class="pure-menu pure-menu-horizontal">
+    <a href="#" class="pure-menu-heading pure-menu-link">Contractor</a>
+    <ul class="pure-menu-list">
+        <li class="pure-menu-item"><a href="/customer/bids/place" class="pure-menu-link">Customer</a></li>
+    </ul>
+</div>
+
+<div class="pure-g">
+    <div class="pure-u-1-2 l-box">
         <h1>Bids</h1>
 
         <table id="bids-table" class="pure-table pure-table-bordered">
@@ -29,11 +37,12 @@
             </tbody>
         </table>
     </div>
-    <div class="pure-u-1-2">
+    <div class="pure-u-1-2 l-box">
         <h1>Volume</h1>
 
         <p id="contractor-volume" class="current-volume">$ 0.00</p>
     </div>
+
 </div>
 
 <script src="../../components/vendor/jquery/dist/jquery.min.js"></script>
