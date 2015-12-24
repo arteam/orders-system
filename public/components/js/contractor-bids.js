@@ -7,6 +7,7 @@ $(document).ready(function () {
 
     localStorage['currentBidIds'] = '';
     updateContractorVolume();
+
     $.get("/api/bids", findBids);
     setInterval(function () {
         $.get("/api/bids", findBids)
@@ -109,13 +110,15 @@ function removeBid(id) {
 }
 
 /**
- * Update the current sales volume
+ * Update the current sales volume and set contractor id
  */
 function updateContractorVolume() {
     $.get('/api/contractors/profile', function (contractor) {
+        $('#contractor-id').text(contractor.id);
         $('#contractor-volume').text('$ ' + contractor.amount);
     });
 }
+
 
 function getContractorSession() {
     return document.cookie.replace(/(?:(?:^|.*;\s*)cnt_session_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
