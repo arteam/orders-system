@@ -16,16 +16,20 @@ function findBids(bids) {
 
     // Add new bids to the list
     var newBidIds = [];
+
     for (var i = bids.length - 1; i >= 0; i--) {
         var id = parseInt(bids[i].id);
         // If it's a new bid, add to the table with the "fade in" effect
         if (currentBidIds.indexOf(id) < 0) {
+            var product = bids[i].product;
             var tr = $('<tr>')
                 .attr('id', 'row' + id)
                 .append($('<td>').append(id))
-                .append($('<td>').append(bids[i].product))
+                .append($('<td>').append(product))
                 .append($('<td>').append(bids[i].amount))
                 .append($('<td>').append(bids[i].price))
+                .append($('<td>').append(createTakeButton(id, product))
+                )
                 .fadeIn(2000);
             // If the id is greater than then maximum bid, it's a new bid
             // and we should place it before the top element. Otherwise it's
@@ -49,4 +53,32 @@ function findBids(bids) {
 
     // Sync the current bids ids
     localStorage['currentBidIds'] = JSON.stringify(newBidIds);
+}
+
+/**
+ * Create a new button and add an event handler that takes the specified bid
+ * @param id
+ * @returns {*|jQuery}
+ */
+function createTakeButton(id, name) {
+    return $('<button>')
+        .attr('type', 'button')
+        .addClass('pure-button')
+        .append('Take')
+        .click(function () {
+            takeBid(id, name)
+        });
+}
+
+/**
+ * Take the specified bid and update the bids table
+ * @param id
+ */
+function takeBid(id, name) {
+    $.post('/api/bids/' + id + '/take', function () {
+        $('#row' + id).fadeOut(2000);
+        sweetAlert('Success', 'Bid "' + name + '" has been taken!');
+    }).fail(function () {
+        sweetAlert('Server error', 'Unable to take the bid', 'error');
+    });
 }
