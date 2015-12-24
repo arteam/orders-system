@@ -49,7 +49,7 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
     $sessionId = sha1(openssl_random_pseudo_bytes(32));
 
     $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 0.0)");
+    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 500.0)");
     $stmt->bindParam(":session_id", $sessionId);
     $stmt->execute();
     $stmt = null;
