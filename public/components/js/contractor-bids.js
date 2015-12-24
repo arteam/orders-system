@@ -7,6 +7,14 @@ $(document).ready(function () {
     }, 2000);
 });
 
+$("#logout").click(function () {
+    $.post('/api/logout', function () {
+        window.location.replace("/")
+    }).fail(function () {
+        sweetAlert('Server error', 'Unable to log out', 'error');
+    });
+});
+
 function findBids(bids) {
     // Work with the bids table body
     var tbody = $("#bids-table").find("tbody");

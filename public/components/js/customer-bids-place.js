@@ -22,6 +22,15 @@ $("#bid-form").on('keypress', function (event) {
     }
 });
 
+$("#logout").click(function () {
+    $.post('/api/logout', function () {
+        window.location.replace("/")
+    }).fail(function () {
+        sweetAlert('Server error', 'Unable to log out', 'error');
+    });
+});
+
+
 function placeBid() {
     var productInput = $("#product");
     var product = productInput.val().trim();
