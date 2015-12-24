@@ -27,16 +27,14 @@ $app->get('/', function (Request $request, Response $response) {
 
 // CUSTOMERS
 
-$app->get('/api/customers', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams("customers");
-
+$app->get('/api/customer/profile', function (Request $request, Response $response) {
     try {
-        $pdo = buildPDO($dbName, $user, $pass);
-        $stmt = $pdo->query("select id, amount from customers");
-        $customers = json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
-        $stmt = null;
-        $pdo = null;
-        $response->getBody()->write($customers);
+        $contractorSessionId = $request->getCookieParams()['cst_session_id'];
+        if (!isset($contractorSessionId)) {
+            return forbidden($response);
+        }
+        $customer = getCustomer($contractorSessionId);
+        $response->getBody()->write(json_encode($customer));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
         return handleError($response);
@@ -306,6 +304,28 @@ function getCustomerId($customerSessionId)
     $stmt = null;
     $customersPdo = null;
     return $customerId;
+}
+
+/**
+ * Get a customer by the provided session
+ *
+ * @param $customerSessionId |null
+ * @return null
+ */
+function getCustomer($customerSessionId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    $customersPdo = buildPDO($dbName, $user, $pass);
+    $stmt = $customersPdo->prepare("select id, amount from customers where session_id=:session_id");
+    $stmt->bindParam(':session_id', $customerSessionId);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row === false) {
+        return null;
+    }
+    $stmt = null;
+    $customersPdo = null;
+    return $row;
 }
 
 /**
