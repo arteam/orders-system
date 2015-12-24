@@ -5,8 +5,11 @@ var customerSessionIdRegexp = /(?:(?:^|.*;\s*)cst_session_id\s*\=\s*([^;]*).*$)|
 
 $(document).ready(function () {
     if (getCustomerSession().length == 0) {
-        window.location = '/'
+        window.location = '/';
+        return;
     }
+
+    updateBalance();
 });
 
 function getCustomerSession() {
@@ -131,4 +134,10 @@ function validatePrice(textPrice) {
         return false;
     }
     return true;
+}
+
+function updateBalance() {
+    $.get('/api/customer/profile', function (customer) {
+        $('#customer-balance').text("$ " + customer.amount);
+    });
 }

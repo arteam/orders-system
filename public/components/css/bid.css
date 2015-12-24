@@ -12,6 +12,10 @@
     margin-left: 5px;
 }
 
+.bid-form {
+    margin-top: 15px
+}
+
 tr:hover {
     background-color: #f2f2f2;
 }
@@ -23,6 +27,7 @@ tr:hover {
 .pure-g > div {
     box-sizing: border-box;
 }
+
 .l-box {
     padding: 1em;
 }

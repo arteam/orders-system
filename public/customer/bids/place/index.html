@@ -14,33 +14,46 @@
     <a href="#" class="pure-menu-heading pure-menu-link">Customer</a>
     <ul class="pure-menu-list">
         <li class="pure-menu-item"><a href="/contractor/bids" class="pure-menu-link">Contractor</a></li>
-        <li class="pure-menu-item"><button id="logout" class="pure-button button-logout">Log out</button></li>
+        <li class="pure-menu-item">
+            <button id="logout" class="pure-button button-logout">Log out</button>
+        </li>
     </ul>
 </div>
+<div class="pure-g">
+    <div class="pure-u-1-2 l-box">
 
-<form id="bid-form" class="pure-form pure-form-aligned" style="padding: 2em">
-    <fieldset>
-        <legend>Bid</legend>
+        <form id="bid-form" class="pure-form pure-form-aligned bid-form">
+            <fieldset>
+                <legend>Bid</legend>
 
-        <div class="pure-control-group">
-            <label for="product">Product</label>
-            <input id="product" placeholder="Product name" required>
-        </div>
+                <div class="pure-control-group">
+                    <label for="product">Product</label>
+                    <input id="product" placeholder="Product name" required>
+                </div>
 
-        <div class="pure-control-group">
-            <label for="amount">Amount</label>
-            <input id="amount" type="number" placeholder="0" required>
-        </div>
+                <div class="pure-control-group">
+                    <label for="amount">Amount</label>
+                    <input id="amount" type="number" placeholder="0" required>
+                </div>
 
-        <div class="pure-control-group">
-            <label for="price">Price</label>
-            <input id="price" placeholder="0.00" required>
-        </div>
-        <div class="pure-controls">
-            <button id="place-bid" type="button" class="pure-button pure-button-primary button-place-bid">Place</button>
-        </div>
-    </fieldset>
-</form>
+                <div class="pure-control-group">
+                    <label for="price">Price</label>
+                    <input id="price" placeholder="0.00" required>
+                </div>
+            </fieldset>
+            <div class="pure-controls">
+                <button id="place-bid" type="button" class="pure-button pure-button-primary button-place-bid">
+                    Place
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="pure-u-1-2 l-box">
+        <h2>Volume</h2>
+
+        <p id="customer-balance" class="current-amount">$ 0.00</p>
+    </div>
+</div>
 <script src="../../../components/vendor/jquery/dist/jquery.min.js"></script>
 <script src="../../../components/vendor/sweetalert/dist/sweetalert.min.js"></script>
 <script src="../../../components/js/customer-bids-place.js"></script>
