@@ -1,5 +1,6 @@
 $(document).ready(function () {
     localStorage['currentBidIds'] = '';
+    updateContractorVolume();
     $.get("/api/bids", findBids);
     setInterval(function () {
         $.get("/api/bids", findBids)
@@ -47,7 +48,7 @@ function findBids(bids) {
     for (var j = 0; j < currentBidIds.length; j++) {
         var bidId = currentBidIds[j];
         if (newBidIds.indexOf(bidId) < 0) {
-            $('#row' + bidId).fadeOut(2000);
+            removeBid(bidId);
         }
     }
 
@@ -70,7 +71,6 @@ function createTakeButton(id, name) {
             takeBid(id, name)
         });
 }
-
 /**
  * Take the specified bid and update the bids table
  * @param id
@@ -78,9 +78,27 @@ function createTakeButton(id, name) {
  */
 function takeBid(id, name) {
     $.post('/api/bids/' + id + '/take', function () {
-        $('#row' + id).fadeOut(2000);
+        removeBid(id);
+        updateContractorVolume();
         sweetAlert('Success', 'Bid "' + name + '" has been taken!');
     }).fail(function () {
         sweetAlert('Server error', 'Unable to take the bid', 'error');
+    });
+}
+
+/**
+ * Remove the bid from the table
+ * @param id
+ */
+function removeBid(id) {
+    $('#row' + id).fadeOut(2000);
+}
+
+/**
+ * Update the current sales volume
+ */
+function updateContractorVolume() {
+    $.get('/api/contractors/profile', function (contractor) {
+        $('#contractor-volume').text('$ ' + contractor.amount);
     });
 }
