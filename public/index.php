@@ -6,6 +6,21 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 require '../vendor/autoload.php';
 
 $app = new \Slim\App;
+
+/**
+ * Security checks befory every request
+ */
+$app->add(function ($request, $response, $next) {
+    if (!checkOriginHeaders($request)) {
+        return forbidden($response);
+    }
+    $response = $next($request, $response);
+    return $response;
+});
+
+/**
+ * Serve index.html in the development mode
+ */
 $app->get('/', function (Request $request, Response $response) {
     $response->getBody()->write(file_get_contents("index.html"));
 });
@@ -633,4 +648,29 @@ function handleError(Response $response)
     $error_message = array("code" => 500, "message" => "Internal Server error");
     $response->getBody()->write(json_encode($error_message));
     return $response->withStatus(500, "Internal Server error")->withHeader('Content-Type', 'application/json');
+}
+
+/**
+ * Check that a request comes from the same origin that the server
+ * @param Request $request
+ * @return bool
+ */
+function checkOriginHeaders(Request $request)
+{
+    $config = parse_ini_file("/etc/orders-system/conf.ini", false);
+    $originHost = $config['originHost'];
+    return isFromOriginHost($request, $originHost, 'Origin') &&
+    isFromOriginHost($request, $config['originHost'], 'Referer');
+}
+
+function isFromOriginHost(Request $request, $originHost, $header)
+{
+    $value = $request->getHeader($header);
+    if (isset($value) && count($value) > 0) {
+        $url = parse_url($value[0]);
+        if (!$url || $url['host'] != $originHost) {
+            return false;
+        }
+    }
+    return true;
 }
