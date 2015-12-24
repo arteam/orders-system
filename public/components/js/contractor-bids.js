@@ -58,13 +58,14 @@ function findBids(bids) {
 /**
  * Create a new button and add an event handler that takes the specified bid
  * @param id
+ * @param name
  * @returns {*|jQuery}
  */
 function createTakeButton(id, name) {
     return $('<button>')
         .attr('type', 'button')
-        .addClass('pure-button')
-        .append('Take')
+        .addClass('button-take pure-button')
+        .append($('<i>').addClass('fa fa-sign-in fa-2x'))
         .click(function () {
             takeBid(id, name)
         });
@@ -73,6 +74,7 @@ function createTakeButton(id, name) {
 /**
  * Take the specified bid and update the bids table
  * @param id
+ * @param name
  */
 function takeBid(id, name) {
     $.post('/api/bids/' + id + '/take', function () {
