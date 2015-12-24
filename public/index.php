@@ -353,7 +353,9 @@ function getBids()
     list($dbName, $user, $pass) = getDbConnectionParams("bids");
 
     $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->query("select id, product, amount, price, customer_id, place_time from bids");
+    $stmt = $pdo->query("select id, product, amount, price, customer_id, place_time from bids
+                         order by place_time desc
+                         limit 10");
     $bids = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $stmt = null;
     $pdo = null;
