@@ -211,6 +211,25 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
         ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; Path=/");
 });
 
+$app->get('/api/contractors/profile', function (Request $request, Response $response) {
+    try {
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
+        if (!isset($contractorSessionId)) {
+            return forbidden($response);
+        }
+
+        $contractor = getContractor($contractorSessionId);
+        if (!isset($contractor)) {
+            return forbidden($response);
+        }
+
+        $response->getBody()->write(json_encode($contractor));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (PDOException $e) {
+        return handleError($response);
+    }
+});
+
 $app->run();
 
 
@@ -316,6 +335,27 @@ function getContractorId($contractorSessionId)
     $stmt = null;
     $pdo = null;
     return $contractorId;
+}
+
+/**
+ * Get a contractor by the provided session id
+ * @param $contractorSessionId
+ * @return mixed|null
+ */
+function getContractor($contractorSessionId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("select id, amount from contractors where session_id=:session_id");
+    $stmt->bindParam(':session_id', $contractorSessionId);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row === false) {
+        return null;
+    }
+    $stmt = null;
+    $pdo = null;
+    return $row;
 }
 
 /**
