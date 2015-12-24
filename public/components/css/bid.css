@@ -5,3 +5,11 @@
 tr:hover {
     background-color: #f2f2f2;
 }
+
+.current-volume {
+    font-size: 25px;
+}
+
+.main {
+    padding: 1em;
+}

@@ -10,24 +10,30 @@
     <link rel="stylesheet" href="../../components/css/bid.css">
 </head>
 <body>
+<div class="pure-g main">
+    <div class="pure-u-1-2">
+        <h1>Bids</h1>
 
-<div style="padding: 1em">
-    <h1>Bids</h1>
+        <table id="bids-table" class="pure-table pure-table-bordered">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Product</th>
+                <th>Amount</th>
+                <th>Price</th>
+                <th>Take</th>
+            </tr>
+            </thead>
 
-    <table id="bids-table" class="pure-table pure-table-bordered">
-        <thead>
-        <tr>
-            <th>Id</th>
-            <th>Product</th>
-            <th>Amount</th>
-            <th>Price</th>
-            <th>Take</th>
-        </tr>
-        </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <div class="pure-u-1-2">
+        <h1>Volume</h1>
 
-        <tbody>
-        </tbody>
-    </table>
+        <p class="current-volume">$ 0.00</p>
+    </div>
 </div>
 
 <script src="../../components/vendor/jquery/dist/jquery.min.js"></script>
