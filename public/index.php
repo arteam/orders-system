@@ -75,6 +75,8 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         }
 
         $bids = getBids();
+        // Escape HTML output
+        array_walk_recursive($bids, "escapeValue");
         $response->getBody()->write(json_encode($bids));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
@@ -104,6 +106,7 @@ $app->get('/api/bids/{id}', function (Request $request, Response $response) {
             return notFound($response);
         }
 
+        escapeValue($bid['product']);
         $response->getBody()->write(json_encode($bid));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
@@ -332,4 +335,12 @@ function checkOriginHeaders(Request $request)
     $originHost = $config['originHost'];
     return isFromOriginHost($request, $originHost, 'Origin') &&
     isFromOriginHost($request, $config['originHost'], 'Referer');
+}
+
+/**
+ * Escape HTML symbols in the specified string
+ * @param $value
+ */
+function escapeValue(&$value) {
+    $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
