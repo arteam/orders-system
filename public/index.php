@@ -138,7 +138,14 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         // We won the bid! Let's charge money from the customer
         $customerId = $bid['customer_id'];
         $sum = $bid['price'];
-        if (!chargeCustomer($customerId, $sum)) {
+        $royalty = getRoyalty($sum);
+        if (!isset($royalty)) {
+            // Bad royalty percent format in the config
+            return internalError($response);
+        }
+        $sumWithRoyalty = bcadd($sum, $royalty, 2);
+        if (!chargeCustomer($customerId, $sumWithRoyalty)) {
+            error_log("Unable to charge a customerId=$customerId on sum=$sum");
             $bidsPdo->rollback();
             // The lousy miser customer doesn't have enough money to pay.
             return notFound($response);
@@ -155,7 +162,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
 
         // Write an entry in the journal that we won the bid and got our money
         // from the customer.
-        if (!insertFulfillment($bid['id'], $bid['product'], $bid['amount'], $bid['price'], $bid['customer_id'],
+        if (!insertFulfillment($bid['id'], $bid['product'], $bid['amount'], $sum, $royalty, $bid['customer_id'],
             $bid['place_time'], $contractorId)
         ) {
             $bidsPdo->rollback();
@@ -545,25 +552,27 @@ function getBidAndDeleteItWithoutCommit($bidId)
  * @param $bidId
  * @param $product
  * @param $amount
+ * @param $royalty
  * @param $price
  * @param $customerId
  * @param $placeTime
  * @param $contractorId
  * @return  boolean
  */
-function insertFulfillment($bidId, $product, $amount, $price, $customerId, $placeTime, $contractorId)
+function insertFulfillment($bidId, $product, $amount, $price, $royalty, $customerId, $placeTime, $contractorId)
 {
     list($dbName, $user, $pass) = getDbConnectionParams('fulfillments');
     $pdo = buildPDO($dbName, $user, $pass);
 
     try {
-        $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, customer_id, place_time,
+        $stmt = $pdo->prepare("insert into fulfillments(bid_id, product, amount, price, royalty, customer_id, place_time,
                    fullfill_time, contractor_id) values
-                   (:bid_id, :product, :amount, :price, :customer_id, :place_time, now(), :contractor_id)");
+                   (:bid_id, :product, :amount, :price, :royalty, :customer_id, :place_time, now(), :contractor_id)");
         $stmt->bindParam(":bid_id", $bidId, PDO::PARAM_INT);
         $stmt->bindParam(":product", $product);
         $stmt->bindParam(":amount", $amount, PDO::PARAM_INT);
         $stmt->bindParam(":price", $price);
+        $stmt->bindParam(":royalty", $royalty);
         $stmt->bindParam(":customer_id", $customerId);
         $stmt->bindParam(":place_time", $placeTime);
         $stmt->bindParam(":contractor_id", $contractorId);
@@ -695,4 +704,19 @@ function isFromOriginHost(Request $request, $originHost, $header)
         }
     }
     return true;
+}
+
+/**
+ * Calculate system's royalty
+ * @param $sum
+ * @return null|string
+ */
+function getRoyalty($sum)
+{
+    $config = parse_ini_file("/etc/orders-system/conf.ini", false);
+    $royaltyPercent = $config['royalty'];
+    if (!filter_var($royaltyPercent, FILTER_VALIDATE_REGEXP, ['options' => ['regexp' => '/^0.[0-9]+$/']])) {
+        return null;
+    }
+    return bcmul($sum, $royaltyPercent, 2);
 }
