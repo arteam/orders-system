@@ -4,6 +4,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 require '../vendor/autoload.php';
+require 'errors.php';
 
 $app = new \Slim\App;
 
@@ -589,55 +590,6 @@ function insertFulfillment($bidId, $product, $amount, $price, $royalty, $custome
 }
 
 /**
- * @param Response $response
- * @return MessageInterface
- */
-function forbidden(Response $response)
-{
-    $response->getBody()->write(json_encode(array("code" => 403, "message" => "Forbidden")));
-    return $response
-        ->withStatus(403)
-        ->withHeader('Content-Type', 'application/json');
-}
-
-
-/**
- * @param Response $response
- * @return MessageInterface
- */
-function badRequest(Response $response)
-{
-    $response->getBody()->write(json_encode(array("code" => 400, "message" => "Bad request")));
-    return $response
-        ->withStatus(400)
-        ->withHeader('Content-Type', 'application/json');
-}
-
-/**
- * @param Response $response
- * @return MessageInterface
- */
-function notFound(Response $response)
-{
-    $response->getBody()->write(json_encode(array("code" => 404, "message" => "Not Found")));
-    return $response
-        ->withStatus(404)
-        ->withHeader('Content-Type', 'application/json');
-}
-
-/**
- * @param Response $response
- * @return MessageInterface
- */
-function internalError(Response $response)
-{
-    $response->getBody()->write(json_encode(array("code" => 500, "message" => "Internal error")));
-    return $response
-        ->withStatus(500)
-        ->withHeader('Content-Type', 'application/json');
-}
-
-/**
  * Parse the given section in the configuration file
  *
  * @param $section
@@ -666,19 +618,6 @@ function buildPDO($dbName, $user, $pass)
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);  // Use native prepare statements
     $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false); // Convert numeric values to strings
     return $pdo;
-}
-
-/**
- * Handle an unexpected error
- *
- * @param Response $response
- * @return MessageInterface
- */
-function handleError(Response $response)
-{
-    $error_message = array("code" => 500, "message" => "Internal Server error");
-    $response->getBody()->write(json_encode($error_message));
-    return $response->withStatus(500, "Internal Server error")->withHeader('Content-Type', 'application/json');
 }
 
 /**
