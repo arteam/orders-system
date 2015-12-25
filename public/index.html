@@ -2,19 +2,26 @@
 <html>
 <head>
     <title>Orders System</title>
+
+    <link rel="stylesheet" href="components/vendor/pure/pure-min.css">
+    <link rel="stylesheet" href="components/vendor/pure/base-min.css">
+    <link rel="stylesheet" href="components/css/bid.css">
 </head>
 <body>
 
-<h1>Orders System</h1>
-<ul id="main-links">
-    <li>
-        <button id="registry-contractor" type="button">Registry as a contractor</button>
-    </li>
-    <li>
-        <button id="registry-customer" type="button">Registry as a customer</button>
-    </li>
-</ul>
+<div style="padding-left: 1em">
 
+    <h1>Orders System</h1>
+
+    <ul id="main-links" >
+        <li>
+            <button id="registry-contractor" class="pure-button pure-button-active main-menu-button" type="button">Registry as a contractor</button>
+        </li>
+        <li>
+            <button id="registry-customer" class="pure-button pure-button-active main-menu-button" type="button">Registry as a customer</button>
+        </li>
+    </ul>
+</div>
 
 <script src="components/vendor/jquery/dist/jquery.min.js"></script>
 <script src="components/js/orders-system.js"></script>
