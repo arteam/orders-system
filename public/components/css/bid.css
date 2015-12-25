@@ -31,3 +31,8 @@ tr:hover {
 .l-box {
     padding: 1em;
 }
+
+.main-menu-button {
+    width: 220px;
+    margin-bottom: 10px;
+}
