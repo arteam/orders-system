@@ -294,31 +294,6 @@ function parseBid($bid)
 }
 
 /**
- * Check that a request comes from the same origin that the server
- * @param Request $request
- * @return bool
- */
-function checkOriginHeaders(Request $request)
-{
-    $config = parse_ini_file("/etc/orders-system/conf.ini", false);
-    $originHost = $config['originHost'];
-    return isFromOriginHost($request, $originHost, 'Origin') &&
-    isFromOriginHost($request, $config['originHost'], 'Referer');
-}
-
-function isFromOriginHost(Request $request, $originHost, $header)
-{
-    $value = $request->getHeader($header);
-    if (isset($value) && count($value) > 0) {
-        $url = parse_url($value[0]);
-        if (!$url || $url['host'] != $originHost) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/**
  * Calculate system's royalty
  * @param $sum
  * @return null|string
@@ -331,4 +306,30 @@ function getRoyalty($sum)
         return null;
     }
     return bcmul($sum, $royaltyPercent, 2);
+}
+
+/**
+ * Check that a request comes from the same origin that the server
+ * @param Request $request
+ * @return bool
+ */
+function checkOriginHeaders(Request $request)
+{
+
+    function isFromOriginHost(Request $request, $originHost, $header)
+    {
+        $value = $request->getHeader($header);
+        if (isset($value) && count($value) > 0) {
+            $url = parse_url($value[0]);
+            if (!$url || $url['host'] != $originHost) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    $config = parse_ini_file("/etc/orders-system/conf.ini", false);
+    $originHost = $config['originHost'];
+    return isFromOriginHost($request, $originHost, 'Origin') &&
+    isFromOriginHost($request, $config['originHost'], 'Referer');
 }
