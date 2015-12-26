@@ -59,6 +59,7 @@ user=
 pass=
 
 originHost=localhost
+royalty=0.15
 ```
 
 - Exit from root
