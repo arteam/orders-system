@@ -356,5 +356,6 @@ function buildPDO($dbName, $user, $pass)
     $pdo = new PDO("mysql:host=localhost;dbname=$dbName;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);  // Use native prepare statements
     $pdo->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false); // Convert numeric values to strings
+    $pdo->setAttribute(PDO::ATTR_PERSISTENT, true); // Use persisent connections
     return $pdo;
 }
