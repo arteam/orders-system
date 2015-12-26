@@ -15,7 +15,6 @@ $app = new \Slim\App($container);
  * Security checks before every request
  */
 $app->add(function (Request $request, Response $response, $next) {
-    logger($this)->info($request->getUri()->getPath());
     if (!checkOriginHeaders($request)) {
         logger($this)->addError('Wrong origin', getPath($request));
         return forbidden($response);
@@ -72,6 +71,49 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
     $response->getBody()->write("api/customers/profile");
     return $response->withStatus(201)
         ->withHeader('Set-Cookie', "cst_session_id=$sessionId; path=/; expires=$expires");
+});
+
+
+// CONTRACTORS
+
+$app->post('/api/contractors/register', function (Request $request, Response $response) {
+    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
+    // Generate a secure random id
+    $sessionId = sha1(openssl_random_pseudo_bytes(32));
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("insert into contractors(session_id, amount) values (:session_id, 0.0)");
+    $stmt->bindParam(":session_id", $sessionId);
+    $stmt->execute();
+    $stmt = null;
+    $pdo = null;
+
+    $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
+    $response->getBody()->write("api/contractors/profile");
+    return $response->withStatus(201)
+        ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; path=/; expires=$expires");
+});
+
+$app->get('/api/contractors/profile', function (Request $request, Response $response) {
+    try {
+        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
+            logger($this)->addWarning('No contractor session id', getPath($request));
+            return forbidden($response);
+        }
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
+        $contractor = getContractor($contractorSessionId);
+        if (!isset($contractor)) {
+            logger($this)->addWarning('No contractor found by session id', array(
+                    'cnt_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
+            return forbidden($response);
+        }
+
+        $response->getBody()->write(json_encode($contractor));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (PDOException $e) {
+        return handleError($e, $response);
+    }
 });
 
 // BIDS
@@ -290,48 +332,6 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
         return handleError($e, $response);
     }
 
-});
-
-// CONTRACTORS
-
-$app->post('/api/contractors/register', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
-    // Generate a secure random id
-    $sessionId = sha1(openssl_random_pseudo_bytes(32));
-    $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("insert into contractors(session_id, amount) values (:session_id, 0.0)");
-    $stmt->bindParam(":session_id", $sessionId);
-    $stmt->execute();
-    $stmt = null;
-    $pdo = null;
-
-    $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
-    $response->getBody()->write("api/contractors/profile");
-    return $response->withStatus(201)
-        ->withHeader('Set-Cookie', "cnt_session_id=$sessionId; path=/; expires=$expires");
-});
-
-$app->get('/api/contractors/profile', function (Request $request, Response $response) {
-    try {
-        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
-            logger($this)->addWarning('No contractor session id', getPath($request));
-            return forbidden($response);
-        }
-        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
-        $contractor = getContractor($contractorSessionId);
-        if (!isset($contractor)) {
-            logger($this)->addWarning('No contractor found by session id', array(
-                    'cnt_session_id' => $contractorSessionId,
-                    'uri' => $request->getUri()->getPath())
-            );
-            return forbidden($response);
-        }
-
-        $response->getBody()->write(json_encode($contractor));
-        return $response->withHeader('Content-Type', 'application/json');
-    } catch (PDOException $e) {
-        return handleError($e, $response);
-    }
 });
 
 // LOGOUT
