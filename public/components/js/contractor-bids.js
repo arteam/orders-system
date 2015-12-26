@@ -52,6 +52,7 @@ function showBids(bids) {
                 .append($('<td>').append(product))
                 .append($('<td>').append(bids[i].amount))
                 .append($('<td>').append(bids[i].price))
+                .append($('<td>').append(bids[i].customer_id))
                 .append($('<td>').append(createTakeButton(id, product))
                 )
                 .fadeIn(fadeInterval);
