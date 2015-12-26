@@ -1,3 +1,5 @@
+var fadeInterval = 1000;
+
 $(document).ready(function () {
     // If no session, redirect to the main page
     if (getContractorSession().length == 0) {
@@ -52,7 +54,7 @@ function showBids(bids) {
                 .append($('<td>').append(bids[i].price))
                 .append($('<td>').append(createTakeButton(id, product))
                 )
-                .fadeIn(2000);
+                .fadeIn(fadeInterval);
             // If the id is greater than then maximum bid, it's a new bid
             // and we should place it before the top element. Otherwise it's
             // an old bid, that should be added after the last element.
@@ -112,7 +114,7 @@ function takeBid(id, name) {
  * @param id
  */
 function removeBid(id) {
-    $('#row' + id).fadeOut(2000);
+    $('#row' + id).fadeOut(fadeInterval);
 }
 
 /**
