@@ -63,6 +63,8 @@ royalty=0.15
 logFile=/var/log/orders-system.log
 ```
 
+`chown 600 /etc/orders-system/conf.ini`
+
 - Exit from root
 
 `exit`
