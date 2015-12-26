@@ -62,8 +62,12 @@ function placeBid() {
         productInput.val('');
         amountInput.val('');
         priceInput.val('');
-    }).fail(function () {
-        sweetAlert('Server error', 'Unable to place the bid', 'error');
+    }).fail(function (xhr, status, error) {
+        if (error == 'Conflict') {
+            sweetAlert('Conflict', 'Customer doesn\'t have enough funds', 'error');
+        } else {
+            sweetAlert('Server error', 'Unable to place the bid', 'error');
+        }
     })
 }
 

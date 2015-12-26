@@ -42,6 +42,18 @@ function notFound(Response $response)
  * @param Response $response
  * @return MessageInterface
  */
+function conflict(Response $response)
+{
+    $response->getBody()->write(json_encode(array("code" => 409, "message" => "Conflict")));
+    return $response
+        ->withStatus(409)
+        ->withHeader('Content-Type', 'application/json');
+}
+
+/**
+ * @param Response $response
+ * @return MessageInterface
+ */
 function internalError(Response $response)
 {
     $response->getBody()->write(json_encode(array("code" => 500, "message" => "Internal error")));

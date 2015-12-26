@@ -152,7 +152,7 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             error_log("Unable to charge a customerId=$customerId on sum=$sum");
             $bidsPdo->rollback();
             // The lousy miser customer doesn't have enough money to pay.
-            return notFound($response);
+            return conflict($response);
         }
 
         // Ok, time to move the money to our account
@@ -211,7 +211,7 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
     $customerId = $customer['id'];
     if ($price > $customer['amount']) {
         error_log("Customer $customerId doesn't have enough funds to place the bid with price $price");
-        return badRequest($response);
+        return conflict($response);
     }
 
     try {

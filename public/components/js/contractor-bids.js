@@ -104,8 +104,12 @@ function takeBid(id, name) {
         removeBid(id);
         updateContractorVolume();
         sweetAlert('Success', 'Bid "' + name + '" has been taken!');
-    }).fail(function () {
-        sweetAlert('Server error', 'Unable to take the bid', 'error');
+    }).fail(function (xhr, status, error) {
+        if (error == 'Conflict') {
+            sweetAlert('Conflict', 'Customer doesn\'t have enough funds', 'error')
+        } else {
+            sweetAlert('Server error', 'Unable to take the bid', 'error');
+        }
     });
 }
 
