@@ -5,14 +5,19 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 require '../vendor/autoload.php';
 require 'errors.php';
 require 'db.php';
+require 'MonologProvider.php';
 
-$app = new \Slim\App;
+$container = new \Slim\Container;
+$container->register(new MonologProvider());
+$app = new \Slim\App($container);
 
 /**
- * Security checks befory every request
+ * Security checks before every request
  */
-$app->add(function ($request, $response, $next) {
+$app->add(function (Request $request, Response $response, $next) {
+    logger($this)->info($request->getUri()->getPath());
     if (!checkOriginHeaders($request)) {
+        logger($this)->addError('Wrong origin', getPath($request));
         return forbidden($response);
     }
     $response = $next($request, $response);
@@ -30,15 +35,24 @@ $app->get('/', function (Request $request, Response $response) {
 
 $app->get('/api/customer/profile', function (Request $request, Response $response) {
     try {
-        $contractorSessionId = $request->getCookieParams()['cst_session_id'];
-        if (!isset($contractorSessionId)) {
+        $cookieParams = $request->getCookieParams();
+        if (!array_key_exists('cst_session_id', $cookieParams)) {
+            logger($this)->addWarning('No customer session id', getPath($request));
             return forbidden($response);
         }
+        $contractorSessionId = $cookieParams['cst_session_id'];
         $customer = getCustomer($contractorSessionId);
+        if (!isset($customer)) {
+            logger($this)->addWarning('No customer found by session id', array(
+                    'cst_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
+            return forbidden($response);
+        }
         $response->getBody()->write(json_encode($customer));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 });
 
@@ -64,13 +78,18 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
 
 $app->get('/api/bids', function (Request $request, Response $response) {
     try {
-        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
-        if (!isset($contractorSessionId)) {
+        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
+            logger($this)->addWarning('No contractor session id', getPath($request));
             return forbidden($response);
         }
 
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
         $contractorId = getContractorId($contractorSessionId);
         if (!isset($contractorId)) {
+            logger($this)->addWarning('No contractor found by session id', array(
+                    'cnt_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
             return forbidden($response);
         }
 
@@ -80,29 +99,38 @@ $app->get('/api/bids', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode($bids));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 });
 
 $app->get('/api/bids/{id}', function (Request $request, Response $response) {
     $id = $request->getAttribute("id");
     if (!is_numeric($id)) {
+        logger($this)->addWarning('Wrong bid id', getPath($request));
         return badRequest($response);
     }
 
     try {
-        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
-        if (!isset($contractorSessionId)) {
+        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
+            logger($this)->addWarning('No contractor session id', getPath($request));
             return forbidden($response);
         }
-
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
         $contractorId = getContractorId($contractorSessionId);
         if (!isset($contractorId)) {
+            logger($this)->addWarning('No contractor found by session id', array(
+                    'cnt_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
             return forbidden($response);
         }
 
         $bid = getBidById($id);
         if (!isset($bid)) {
+            logger($this)->addWarning('No bid found by id', array(
+                    'id' => $id,
+                    'uri' => $request->getUri()->getPath())
+            );
             return notFound($response);
         }
 
@@ -110,31 +138,39 @@ $app->get('/api/bids/{id}', function (Request $request, Response $response) {
         $response->getBody()->write(json_encode($bid));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 });
 
 $app->post('/api/bids/{id}/take', function (Request $request, Response $response) {
     $id = $request->getAttribute("id");
     if (!is_numeric($id)) {
+        logger($this)->addWarning('Wrong bid id', getPath($request));
         return badRequest($response);
     }
 
     try {
-        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
-        if (!isset($contractorSessionId)) {
+        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
+            logger($this)->addWarning('No contractor session id', getPath($request));
             return forbidden($response);
         }
-
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
         $contractorId = getContractorId($contractorSessionId);
         if (!isset($contractorId)) {
+            logger($this)->addWarning('No contractor found by session id', array(
+                    'cnt_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
             return forbidden($response);
         }
 
         // Trying to take the order before anyone!
-        // @var GuzzleHttp\Client
         list($bidsPdo, $bid) = getBidAndDeleteItWithoutCommit($id);
         if (!isset($bidsPdo)) {
+            logger($this)->addWarning('Bid has already been taken', array(
+                    'id' => $id,
+                    'uri' => $request->getUri()->getPath())
+            );
             // Someone has already taken the order, what a bummer.
             return notFound($response);
         }
@@ -144,12 +180,16 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
         $sum = $bid['price'];
         $royalty = getRoyalty($sum);
         if (!isset($royalty)) {
+            logger($this)->addError('Wrong royalty in the configuration');
             // Bad royalty percent format in the config
             return internalError($response);
         }
         $sumWithRoyalty = bcadd($sum, $royalty, 2);
         if (!chargeCustomer($customerId, $sumWithRoyalty)) {
-            error_log("Unable to charge a customerId=$customerId on sum=$sum");
+            logger($this)->addError("Unable to charge a customer", array(
+                'customerId' => $customerId,
+                'sum' => $sum
+            ));
             $bidsPdo->rollback();
             // The lousy miser customer doesn't have enough money to pay.
             return conflict($response);
@@ -157,10 +197,13 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
 
         // Ok, time to move the money to our account
         // The transaction can't fail provided hardware and network are reliable.
-        // For the sake of simplicity we don't handle this this case.
         if (!payToContractor($contractorId, $bid['price'])) {
             $bidsPdo->rollback();
-            error_log("Issue refund to customerId=$customerId on sum=$sum");
+            logger($this)->addError("Unable to pay to contractor. Issue refund", array(
+                'contractorId' => $contractorId,
+                'customerId' => $customerId,
+                'sum' => $sum
+            ));
             return internalError($response);
         }
 
@@ -170,47 +213,72 @@ $app->post('/api/bids/{id}/take', function (Request $request, Response $response
             $bid['place_time'], $contractorId)
         ) {
             $bidsPdo->rollback();
-            error_log("Issue refund to customerId=$customerId on sum=$sum");
-            error_log("Take funds from contractorId=$customerId on sum=$sum");
+            logger($this)->addError("Unable to insert a fulfillment. Issue refund", array(
+                'customerId' => $customerId,
+                'sum' => $sum
+            ));
+            logger($this)->addError("Unable to insert a fulfillment. Take funds", array(
+                'contractorId' => $contractorId,
+                'sum' => $sum
+            ));
             return internalError($response);
         };
 
         // We marked that order is fulfilled, so let's commit the bid transaction
         if (!$bidsPdo->commit()) {
-            error_log("Issue refund to customerId=$customerId on sum=$sum");
-            error_log("Take funds from contractorId=$customerId on sum=$sum");
-            error_log("Mark fulfillment to bid=$id as invalid");
+            logger($this)->addError("Unable to commit an order transaction", array(
+                'bidId' => $id
+            ));
+            logger($this)->addError("Unable to commit an order transaction. Issue refund", array(
+                'customerId' => $customerId,
+                'sum' => $sum
+            ));
+            logger($this)->addError("Unable to commit an order transaction. Take funds", array(
+                'contractorId' => $contractorId,
+                'sum' => $sum
+            ));
+            logger($this)->addError("Mark a fulfillment as invalid", array(
+                'bidId' => $id
+            ));
             return internalError($response);
         }
 
         $response->getBody()->write(json_encode(array("code" => 200, "message" => "OK")));
         return $response;
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 });
 
 
 $app->post('/api/bids/place', function (Request $request, Response $response) {
-    $customerSessionId = $request->getCookieParams()["cst_session_id"];
-    if (!isset($customerSessionId)) {
+    if (!array_key_exists('cst_session_id', $request->getCookieParams())) {
+        logger($this)->addWarning('No contractor session id', getPath($request));
         return forbidden($response);
     }
-
+    $customerSessionId = $request->getCookieParams()["cst_session_id"];
     $customer = getCustomer($customerSessionId);
     if (!isset($customer)) {
+        logger($this)->addWarning('No contractor found by session id', array(
+                'cst_session_id' => $customerSessionId,
+                'uri' => $request->getUri()->getPath())
+        );
         return forbidden($response);
     }
 
     $bid = json_decode($request->getBody());
     list($product, $amount, $price) = parseBid($bid);
     if (!isset($product)) {
+        logger($this)->addWarning('Wrong bid', getPath($request));
         return badRequest($response);
     }
 
     $customerId = $customer['id'];
     if ($price > $customer['amount']) {
-        error_log("Customer $customerId doesn't have enough funds to place the bid with price $price");
+        logger($this)->addWarning("Customer doesn't have enough funds to place the bid with price", array(
+            'customer_id' => $customerId,
+            'price' => $price,
+        ));
         return conflict($response);
     }
 
@@ -219,7 +287,7 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
         $response->getBody()->write("api/bids/$bidId");
         return $response->withStatus(201);
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 
 });
@@ -245,20 +313,24 @@ $app->post('/api/contractors/register', function (Request $request, Response $re
 
 $app->get('/api/contractors/profile', function (Request $request, Response $response) {
     try {
-        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
-        if (!isset($contractorSessionId)) {
+        if (!array_key_exists('cnt_session_id', $request->getCookieParams())) {
+            logger($this)->addWarning('No contractor session id', getPath($request));
             return forbidden($response);
         }
-
+        $contractorSessionId = $request->getCookieParams()['cnt_session_id'];
         $contractor = getContractor($contractorSessionId);
         if (!isset($contractor)) {
+            logger($this)->addWarning('No contractor found by session id', array(
+                    'cnt_session_id' => $contractorSessionId,
+                    'uri' => $request->getUri()->getPath())
+            );
             return forbidden($response);
         }
 
         $response->getBody()->write(json_encode($contractor));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (PDOException $e) {
-        return handleError($response);
+        return handleError($e, $response);
     }
 });
 
@@ -350,4 +422,38 @@ function checkOriginHeaders(Request $request)
 function escapeValue(&$value)
 {
     $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Get the current logger
+ * @param $this
+ * @return Monolog\Logger
+ */
+function logger($app)
+{
+    return $app->get('logger');
+}
+
+/**
+ * Get URI path for logging
+ * @param Request $request
+ * @return array
+ */
+function getPath(Request $request)
+{
+    return array('uri' => $request->getUri()->getPath());
+}
+
+/**
+ *  Handle an unexpected error
+ * @param Exception $e
+ * @param Response $response
+ * @return \Psr\Http\Message\MessageInterface
+ */
+function handleError(Exception $e, Response $response)
+{
+    logger($this)->addError('Unexpected error', array(
+        'error' => $e->getTraceAsString()
+    ));
+    return internalError($response);
 }
