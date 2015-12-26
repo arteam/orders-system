@@ -5,13 +5,15 @@ $(document).ready(function () {
         return;
     }
 
+    // Clear the list of bid is in the storage
     localStorage['currentBidIds'] = '';
-    updateContractorVolume();
 
-    $.get("/api/bids", findBids);
+    // Get the list of bids  and schedule updates
+    $.get("/api/bids", showBids);
     setInterval(function () {
-        $.get("/api/bids", findBids)
+        $.get("/api/bids", showBids)
     }, 2000);
+    updateContractorVolume();
 });
 
 $("#logout").click(function () {
@@ -22,7 +24,11 @@ $("#logout").click(function () {
     });
 });
 
-function findBids(bids) {
+/**
+ * Show the list of bids in an HTML table
+ * @param bids
+ */
+function showBids(bids) {
     // Work with the bids table body
     var tbody = $("#bids-table").find("tbody");
 
@@ -118,7 +124,6 @@ function updateContractorVolume() {
         $('#contractor-volume').text('$ ' + contractor.amount);
     });
 }
-
 
 function getContractorSession() {
     return document.cookie.replace(/(?:(?:^|.*;\s*)cnt_session_id\s*\=\s*([^;]*).*$)|^.*$/, "$1");
