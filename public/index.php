@@ -197,14 +197,20 @@ $app->post('/api/bids/place', function (Request $request, Response $response) {
         return forbidden($response);
     }
 
-    $customerId = getCustomerId($customerSessionId);
-    if (!isset($customerId)) {
+    $customer = getCustomer($customerSessionId);
+    if (!isset($customer)) {
         return forbidden($response);
     }
 
     $bid = json_decode($request->getBody());
     list($product, $amount, $price) = parseBid($bid);
     if (!isset($product)) {
+        return badRequest($response);
+    }
+
+    $customerId = $customer['id'];
+    if ($price > $customer['amount']) {
+        error_log("Customer $customerId doesn't have enough funds to place the bid with price $price");
         return badRequest($response);
     }
 
@@ -341,6 +347,7 @@ function checkOriginHeaders(Request $request)
  * Escape HTML symbols in the specified string
  * @param $value
  */
-function escapeValue(&$value) {
+function escapeValue(&$value)
+{
     $value = htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
