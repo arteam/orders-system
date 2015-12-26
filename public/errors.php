@@ -61,14 +61,3 @@ function internalError(Response $response)
         ->withStatus(500)
         ->withHeader('Content-Type', 'application/json');
 }
-
-/**
- * Handle an unexpected error
- *
- * @param Response $response
- * @return MessageInterface
- */
-function handleError(Response $response)
-{
-   internalError($response);
-}

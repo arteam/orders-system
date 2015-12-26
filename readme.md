@@ -60,6 +60,7 @@ pass=
 
 originHost=localhost
 royalty=0.15
+logFile=/var/log/orders-system.log
 ```
 
 - Exit from root
