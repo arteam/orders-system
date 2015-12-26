@@ -56,16 +56,9 @@ $app->get('/api/customer/profile', function (Request $request, Response $respons
 });
 
 $app->post('/api/customers/register', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams('customers');
     // Random secure session id
     $sessionId = sha1(openssl_random_pseudo_bytes(32));
-
-    $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 500.0)");
-    $stmt->bindParam(":session_id", $sessionId);
-    $stmt->execute();
-    $stmt = null;
-    $pdo = null;
+    addCustomer($sessionId);
 
     $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
     $response->getBody()->write("api/customers/profile");
@@ -77,15 +70,9 @@ $app->post('/api/customers/register', function (Request $request, Response $resp
 // CONTRACTORS
 
 $app->post('/api/contractors/register', function (Request $request, Response $response) {
-    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
     // Generate a secure random id
     $sessionId = sha1(openssl_random_pseudo_bytes(32));
-    $pdo = buildPDO($dbName, $user, $pass);
-    $stmt = $pdo->prepare("insert into contractors(session_id, amount) values (:session_id, 0.0)");
-    $stmt->bindParam(":session_id", $sessionId);
-    $stmt->execute();
-    $stmt = null;
-    $pdo = null;
+    addContractor($sessionId);
 
     $expires = gmdate('D, d-M-Y H:i:s e', strtotime('7 days'));
     $response->getBody()->write("api/contractors/profile");
