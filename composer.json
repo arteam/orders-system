@@ -1,4 +1,7 @@
 {
+  "config": {
+    "vendor-dir": "./public/vendor"
+  },
   "require": {
     "slim/slim": "^3.0-dev",
     "monolog/monolog": "^1.17"

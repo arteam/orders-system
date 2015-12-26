@@ -8,7 +8,7 @@
 *.iml
 
 # Composer dependencies
-/vendor
+/public/vendor
 
 # Bower dependencies
 /public/components/vendor
