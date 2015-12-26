@@ -4,6 +4,7 @@ var priceRegexp = /^-?[0-9]+(\.[0-9]+)?$/;
 var customerSessionIdRegexp = /(?:(?:^|.*;\s*)cst_session_id\s*\=\s*([^;]*).*$)|^.*$/;
 
 $(document).ready(function () {
+    // Redirect to the front page, if session is not exist
     if (getCustomerSession().length == 0) {
         window.location = '/';
         return;
@@ -12,28 +13,27 @@ $(document).ready(function () {
     updateBalance();
 });
 
-function getCustomerSession() {
-    return document.cookie.replace(customerSessionIdRegexp, "$1");
-}
 
-$("#place-bid").click(function () {
-    placeBid()
-});
+// Place a bid by a click on the button by pressing "Enter"
+$("#place-bid").click(placeBid);
 $("#bid-form").on('keypress', function (event) {
     if (event.keyCode == 13) {
         placeBid();
     }
 });
 
+// Logout from the current session
 $("#logout").click(function () {
     $.post('/api/logout', function () {
-        window.location.replace("/")
+        window.location.replace("/");
     }).fail(function () {
         sweetAlert('Server error', 'Unable to log out', 'error');
     });
 });
 
-
+/**
+ * Place a new bid to the server
+ */
 function placeBid() {
     var productInput = $("#product");
     var product = productInput.val().trim();
@@ -52,19 +52,19 @@ function placeBid() {
     if (!validatePrice(textPrice)) {
         return;
     }
+
     $.post('/api/bids/place', JSON.stringify({
         "product": product,
         "amount": parseInt(textAmount),
         "price": parseFloat(textPrice).toFixed(2)
     })).success(function () {
-        sweetAlert('Success', "Bid has been placed!")
-    }).fail(function () {
-        sweetAlert('Server error', 'Unable to place the bid', 'error');
-    }).done(function () {
+        sweetAlert('Success', "Bid has been placed!");
         productInput.val('');
         amountInput.val('');
         priceInput.val('');
-    });
+    }).fail(function () {
+        sweetAlert('Server error', 'Unable to place the bid', 'error');
+    })
 }
 
 /**
@@ -115,6 +115,11 @@ function validateAmount(textAmount) {
     return true;
 }
 
+/**
+ * Validates that price is a real number between 0 and 10000
+ * @param textPrice
+ * @returns {boolean}
+ */
 function validatePrice(textPrice) {
     if (textPrice.length == 0) {
         sweetAlert('Validation error', 'Price is not set', 'error');
@@ -136,9 +141,20 @@ function validatePrice(textPrice) {
     return true;
 }
 
+/**
+ * Updates the current customer's balance and id
+ */
 function updateBalance() {
     $.get('/api/customer/profile', function (customer) {
         $('#customer-id').text(customer.id);
         $('#customer-balance').text("$ " + customer.amount);
     });
+}
+
+/**
+ * Helper function to get the current session from the `Cookie` header
+ * @returns {string}
+ */
+function getCustomerSession() {
+    return document.cookie.replace(customerSessionIdRegexp, "$1");
 }
