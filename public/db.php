@@ -46,6 +46,21 @@ function getCustomer($customerSessionId)
 }
 
 /**
+ * Add a new customer with the provide session
+ * @param $customerSessionId
+ */
+function addCustomer($sessionId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('customers');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("insert into customers(session_id, amount) values (:session_id, 500.0)");
+    $stmt->bindParam(":session_id", $sessionId);
+    $stmt->execute();
+    $stmt = null;
+    $pdo = null;
+}
+
+/**
  * Charge some funds from the customer account
  *
  * @param $customerId
@@ -115,6 +130,21 @@ function getContractor($contractorSessionId)
     $stmt = null;
     $pdo = null;
     return $row;
+}
+
+/**
+ * Add a new contractor by the provided session
+ * @param $contractorSessionId
+ */
+function addContractor($sessionId)
+{
+    list($dbName, $user, $pass) = getDbConnectionParams('contractors');
+    $pdo = buildPDO($dbName, $user, $pass);
+    $stmt = $pdo->prepare("insert into contractors(session_id, amount) values (:session_id, 0.0)");
+    $stmt->bindParam(":session_id", $sessionId);
+    $stmt->execute();
+    $stmt = null;
+    $pdo = null;
 }
 
 /**
