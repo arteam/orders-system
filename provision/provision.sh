@@ -3,6 +3,7 @@ set -e
 
 # Install MySQL
 sudo apt-get install mysql-server mysql-client
+sudo mysql_secure_installation
 
 # Install PHP 5.6.*
 sudo add-apt-repository ppa:ondrej/php5-5.6
