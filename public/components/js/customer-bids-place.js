@@ -149,7 +149,7 @@ function validatePrice(textPrice) {
  * Updates the current customer's balance and id
  */
 function updateBalance() {
-    $.get('/api/customer/profile', function (customer) {
+    $.get('/api/customers/profile', function (customer) {
         $('#customer-id').text(customer.id);
         $('#customer-balance').text("$ " + customer.amount);
     });

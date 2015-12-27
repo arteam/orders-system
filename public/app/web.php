@@ -31,7 +31,7 @@ $app->get('/', function (Request $request, Response $response) {
 
 // CUSTOMERS
 
-$app->get('/api/customer/profile', function (Request $request, Response $response) {
+$app->get('/api/customers/profile', function (Request $request, Response $response) {
     try {
         $cookieParams = $request->getCookieParams();
         if (!array_key_exists('cst_session_id', $cookieParams)) {
