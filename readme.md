@@ -1,7 +1,12 @@
 # An order completion system
 
 This is a small system that allows to place and fullfill orders for 
-customers and contractors.
+customers and contractors. A customer places a bid on a specific 
+product with the correspoding sum. The system publishes the bid to
+the registered contractors. Interested contractors see it. The quickest
+one takes the bid. The system marks the bid as completed, charges a 
+roaylty from the sum, and transfers funds from the customer to 
+the contractor.
 
 # Architecture
 
@@ -9,7 +14,7 @@ The system consists from 4 MySQL databases, a PHP backend that provides a REST A
 
 # Databases
 
-The database are named _customers_, _contractors_, _bids_ and _fulfillments_. Each database has a table with the same name as the database. See the _migration/sql_ directory for it's database schemas;  
+The database are named _customers_, _contractors_, _bids_ and _fulfillments_. Each database has a table with the same name as the database. See the _migrations/sql_ directory for it's database schemas.  
 
 # API
 
