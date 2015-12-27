@@ -185,6 +185,31 @@ bower install
 - Setup the web server
 
 ```
+Buil-in PHP Web server
 cd public/
 php -S localhost:8000
+```
+
+or via NGINX
+`vim /etc/nginx/sites-available/default`
+```
+server {
+	listen 80 default_server;
+        index index.html index.htm index.php;
+        root /home/user/apps/orders-system/public;
+        server_name 127.0.0.1;
+
+        location / {
+              try_files $uri $uri/ /index.php$is_args$args;
+	    }
+
+	location ~ \.php$ {
+        try_files $uri =404;
+		fastcgi_split_path_info ^(.+\.php)(/.+)$;
+
+		fastcgi_pass unix:/var/run/php5-fpm.sock;
+		fastcgi_index index.php;
+		include fastcgi_params;
+	}
+}
 ```
