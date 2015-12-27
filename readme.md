@@ -20,7 +20,7 @@ The database are named _customers_, _contractors_, _bids_ and _fulfillments_. Ea
 
 The server provides the following REST API
 
-* _GET  /api/customer/profile_
+* _GET  /api/customers/profile_
 
 
 Gets the the profile of a registered customer. Requires the `cst_session_id` cookie being set. Responses with:
