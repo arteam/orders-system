@@ -108,6 +108,13 @@ responses with the 409 error code. Request format is:
 
 Logs out the current contractor, customer or both.
 
+# User Interface
+
+UI provides 2 modes (for a customer and for a contractor). The main page
+offers to register as either. After registering a session is registered
+for the user and it redirected to the corresponding page. 
+The session lives while the user doesn't log out or doesn't register again.
+
 # Server provision
 
 See _provision/provision.sh_
@@ -191,7 +198,9 @@ php -S localhost:8000
 ```
 
 or via NGINX
+
 `vim /etc/nginx/sites-available/default`
+
 ```
 server {
 	listen 80 default_server;
